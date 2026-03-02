@@ -1,0 +1,25 @@
+{% extends "main/base.html" %}
+
+{% block title %}My account{% endblock %}
+
+{% block content %}
+<h1>My account</h1>
+
+<p>Logged in as <strong>{{ user.username }}</strong></p>
+
+<h2>Current cart</h2>
+{% if cart and items %}
+    <ul>
+        {% for item in items %}
+            <li>{{ item.quantity }} × {{ item.product.name }} ({{ item.product.sku }}) — {{ item.line_total }}</li>
+        {% endfor %}
+    </ul>
+    <p><strong>Total:</strong> {{ cart.total_price }}</p>
+    <p><a href="{% url 'cart_detail' %}">Manage cart</a></p>
+{% else %}
+    <p>You do not have any items in your cart yet.</p>
+{% endif %}
+
+<p><a href="{% url 'product_list' %}">Back to catalog</a></p>
+{% endblock %}
+

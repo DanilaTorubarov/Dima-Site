@@ -1,0 +1,95 @@
+{% extends "main/base.html" %}
+
+{% block title %}Каталог{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div>
+        <div class="hero-title">Широкие трапы скоро в наличии</div>
+        <div class="hero-subtitle">
+            Современные решения для ванной комнаты: душевые системы, смесители и аксессуары.
+        </div>
+        <button class="hero-cta" type="button">Перейти в каталог</button>
+    </div>
+    <div class="hero-placeholder"></div>
+</section>
+
+<section class="homepage-categories">
+    <div class="homepage-categories-title">Фирменный интернет‑магазин</div>
+    <div class="category-tiles">
+        {% for category in categories %}
+            <a href="{% url 'product_list' %}?category={{ category.slug }}" class="category-tile">
+                <div class="category-tile-title">{{ category.name }}</div>
+                <div class="category-tile-meta">Перейти к товарам</div>
+            </a>
+        {% empty %}
+            <p>Категории ещё не созданы.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section>
+    <div class="layout-grid">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Категории</div>
+                <a href="{% url 'product_list' %}"
+                   class="{% if not active_category_slug %}active{% endif %}">Все товары</a>
+                {% for category in categories %}
+                    <a href="{% url 'product_list' %}?category={{ category.slug }}"
+                       class="{% if category.slug == active_category_slug %}active{% endif %}">
+                        {{ category.name }}
+                    </a>
+                {% endfor %}
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Поиск</div>
+                <form method="get">
+                    <input type="text" name="q" placeholder="Название" value="{{ search_query }}"
+                           style="width: 100%; margin-bottom: 0.5rem; padding: 0.35rem 0.5rem; border-radius: 999px; border: 1px solid #e5e7eb;">
+                    <input type="text" name="sku" placeholder="Артикул" value="{{ sku_query }}"
+                           style="width: 100%; margin-bottom: 0.5rem; padding: 0.35rem 0.5rem; border-radius: 999px; border: 1px solid #e5e7eb;">
+                    {% if active_category_slug %}
+                        <input type="hidden" name="category" value="{{ active_category_slug }}">
+                    {% endif %}
+                    <button type="submit" class="btn btn-secondary" style="width: 100%;">Показать</button>
+                </form>
+            </div>
+        </aside>
+
+        <div>
+            <h2 style="margin: 0 0 1rem; font-size: 1rem; font-weight: 600;">Товары</h2>
+            <div class="product-grid">
+                {% for product in products %}
+                    <article class="card">
+                        {% if product.image %}
+                            <div style="margin-bottom: 0.8rem;">
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                                     style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px;">
+                            </div>
+                        {% endif %}
+                        <h2><a href="{% url 'product_detail' product.pk %}">{{ product.name }}</a></h2>
+                        <div class="card-meta">
+                            Артикул {{ product.sku }} · {{ product.category.name }}
+                        </div>
+                        <div class="card-footer">
+                            <form method="post" action="{% url 'add_to_cart' product.pk %}">
+                                {% csrf_token %}
+                                <label style="font-size: 0.8rem; color: #6b7280;">
+                                    Количество:
+                                    <input type="number" name="quantity" value="1" min="1"
+                                           style="width: 3rem; margin-left: 0.25rem;">
+                                </label>
+                                <button type="submit" class="btn btn-primary">В корзину</button>
+                            </form>
+                        </div>
+                    </article>
+                {% empty %}
+                    <p>Товары не найдены.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

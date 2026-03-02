@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Shop{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+<div class="shell">
+    <div class="topbar">
+        <div class="topbar-inner">
+            <div>Интернет‑магазин</div>
+            <div class="topbar-links">
+                <a href="#">Как купить</a>
+                <a href="#">Контакты</a>
+            </div>
+        </div>
+    </div>
+    <header>
+        <div class="header-main">
+            <div class="header-logo">
+                <div class="header-logo-text">Hydra-Point</div>
+            </div>
+            <button class="catalog-button" type="button">
+                <span class="icon">☰</span>
+                <span>Каталог</span>
+            </button>
+            <form class="search-box" method="get" action="{% url 'product_list' %}">
+                <input type="text" name="q" placeholder="Найти товар" value="{{ request.GET.q }}">
+                <button type="submit">🔍</button>
+            </form>
+            <div class="header-actions">
+                {% if user.is_authenticated %}
+                    <span>Здравствуйте, {{ user.username }}</span>
+                {% endif %}
+                <div class="header-icons">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'account_dashboard' %}" class="header-icon">
+                            <span class="header-icon-symbol">👤</span>
+                            <span>Профиль</span>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="header-icon">
+                            <span class="header-icon-symbol">👤</span>
+                            <span>Войти</span>
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'cart_detail' %}" class="header-icon">
+                        <span class="header-icon-symbol">🛒</span>
+                        <span>Корзина</span>
+                    </a>
+                </div>
+                {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'logout' %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary">Выйти</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+    <main>
+        <div class="page-inner">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    <footer>
+        <div class="footer-inner">
+            <span>&copy; {{ now|date:"Y" }} Hydra-Point</span>
+            <span>Лучшие цены на рынке</span>
+        </div>
+    </footer>
+</div>
+</body>
+</html>
+
