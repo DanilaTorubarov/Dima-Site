@@ -1,10 +1,12 @@
 from decimal import Decimal
 
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
+from django.contrib.auth.forms import UserCreationForm
 
 from .models import Cart, CartItem, Category, Product, SharedCart, SharedCartItem
 
@@ -12,6 +14,27 @@ from .models import Cart, CartItem, Category, Product, SharedCart, SharedCartIte
 def _get_or_create_cart_for_user(user):
     cart, _ = Cart.objects.get_or_create(user=user)
     return cart
+
+
+def _get_category_ancestors(category):
+    chain = []
+    current = category
+    while current is not None:
+        chain.append(current)
+        current = current.parent
+    return list(reversed(chain))
+
+
+def _get_category_descendant_ids(root):
+    ids = [root.id]
+    frontier = [root]
+    while frontier:
+        children = list(Category.objects.filter(parent__in=frontier))
+        if not children:
+            break
+        ids.extend(c.id for c in children)
+        frontier = children
+    return ids
 
 
 def product_list(request):
@@ -28,8 +51,13 @@ def product_list(request):
     if sku_query:
         products = products.filter(sku__iexact=sku_query)
 
+    current_category = None
+    category_breadcrumb = []
     if category_slug:
-        products = products.filter(category__slug=category_slug)
+        current_category = get_object_or_404(Category, slug=category_slug)
+        ids = _get_category_descendant_ids(current_category)
+        products = products.filter(category_id__in=ids)
+        category_breadcrumb = _get_category_ancestors(current_category)
 
     context = {
         "products": products,
@@ -37,13 +65,22 @@ def product_list(request):
         "active_category_slug": category_slug,
         "search_query": search_query,
         "sku_query": sku_query,
+        "current_category": current_category,
+        "category_breadcrumb": category_breadcrumb,
     }
     return render(request, "main/product_list.html", context)
 
 
 def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk, available=True)
-    return render(request, "main/product_detail.html", {"product": product})
+    category_breadcrumb = []
+    if product.category:
+        category_breadcrumb = _get_category_ancestors(product.category)
+    return render(
+        request,
+        "main/product_detail.html",
+        {"product": product, "category_breadcrumb": category_breadcrumb},
+    )
 
 def _add_to_session_cart(request, product_id, quantity):
     cart = request.session.get("cart", {})
@@ -241,4 +278,20 @@ def account_dashboard(request):
         "items": items,
     }
     return render(request, "main/account_dashboard.html", context)
+
+
+def register(request):
+    if request.user.is_authenticated:
+        return redirect("product_list")
+
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect("product_list")
+    else:
+        form = UserCreationForm()
+
+    return render(request, "registration/register.html", {"form": form})
 

@@ -3,6 +3,18 @@
 {% block title %}{{ product.name }}{% endblock %}
 
 {% block content %}
+{% if category_breadcrumb %}
+    <nav class="breadcrumbs" style="font-size: 0.8rem; margin-bottom: 0.75rem; color: #6b7280;">
+        <a href="{% url 'product_list' %}">Каталог</a>
+        {% for cat in category_breadcrumb %}
+            ›
+            <a href="{% url 'product_list' %}?category={{ cat.slug }}"
+               {% if forloop.last %}style="font-weight:600; color:#111827;"{% endif %}>
+                {{ cat.name }}
+            </a>
+        {% endfor %}
+    </nav>
+{% endif %}
 <div class="card">
     <h1>{{ product.name }}</h1>
     {% if product.image %}

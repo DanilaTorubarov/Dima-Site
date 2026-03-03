@@ -22,7 +22,7 @@
     <header>
         <div class="header-main">
             <div class="header-logo">
-                <div class="header-logo-text">Hydra-Point</div>
+                <img src="/media/hydropoint.svg" alt="Hydra-Point" style="height: 32px;">
             </div>
             <button class="catalog-button" type="button">
                 <span class="icon">☰</span>
@@ -38,14 +38,14 @@
                 {% endif %}
                 <div class="header-icons">
                     {% if user.is_authenticated %}
-                        <a href="{% url 'account_dashboard' %}" class="header-icon">
-                            <span class="header-icon-symbol">👤</span>
-                            <span>Профиль</span>
-                        </a>
                     {% else %}
                         <a href="{% url 'login' %}" class="header-icon">
                             <span class="header-icon-symbol">👤</span>
                             <span>Войти</span>
+                        </a>
+                        <a href="{% url 'register' %}" class="header-icon">
+                            <span class="header-icon-symbol">➕</span>
+                            <span>Регистрация</span>
                         </a>
                     {% endif %}
                     <a href="{% url 'cart_detail' %}" class="header-icon">

@@ -5,7 +5,7 @@ from .models import Cart, CartItem, Category, Product, SharedCart, SharedCartIte
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug")
+    list_display = ("name", "slug", "parent")
     prepopulated_fields = {"slug": ("name",)}
     search_fields = ("name",)
 
