@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -76,10 +74,27 @@ def product_detail(request, pk):
     category_breadcrumb = []
     if product.category:
         category_breadcrumb = _get_category_ancestors(product.category)
+
+    # Group characteristic values by their CategoryCharacteristic, preserving order
+    characteristics = []
+    seen = {}
+    for pc in product.characteristics.select_related("characteristic").order_by(
+        "characteristic__order", "characteristic__name"
+    ):
+        char = pc.characteristic
+        if char.pk not in seen:
+            seen[char.pk] = []
+            characteristics.append((char, seen[char.pk]))
+        seen[char.pk].append(pc.value)
+
     return render(
         request,
         "main/product_detail.html",
-        {"product": product, "category_breadcrumb": category_breadcrumb},
+        {
+            "product": product,
+            "category_breadcrumb": category_breadcrumb,
+            "characteristics": characteristics,
+        },
     )
 
 def _add_to_session_cart(request, product_id, quantity):
@@ -120,7 +135,6 @@ def add_to_cart(request, pk):
 def cart_detail(request):
     items = []
     total_items = 0
-    total_price = Decimal("0.00")
     cart = None
 
     if request.user.is_authenticated:
@@ -128,7 +142,6 @@ def cart_detail(request):
         for item in cart.items.select_related("product"):
             items.append(item)
             total_items += item.quantity
-            total_price += item.product.price * item.quantity
     else:
         session_cart = request.session.get("cart", {})
         if session_cart:
@@ -155,25 +168,18 @@ def cart_detail(request):
                 product = products.get(product_id)
                 if not product:
                     continue
-                line_total = product.price * quantity
                 guest_item = type(
                     "GuestCartItem",
                     (),
-                    {
-                        "product": product,
-                        "quantity": quantity,
-                        "line_total": line_total,
-                    },
+                    {"product": product, "quantity": quantity},
                 )
                 items.append(guest_item)
                 total_items += quantity
-                total_price += line_total
 
     context = {
         "cart": cart,
         "items": items,
         "total_items": total_items,
-        "total_price": total_price,
     }
     return render(request, "main/cart_detail.html", context)
 

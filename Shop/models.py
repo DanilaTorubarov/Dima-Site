@@ -32,7 +32,6 @@ class Product(models.Model):
     name = models.CharField(max_length=200)
     sku = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to="product_images/", blank=True, null=True)
     category = models.ForeignKey(
         Category, related_name="products", on_delete=models.PROTECT
@@ -67,14 +66,6 @@ class Cart(models.Model):
     def total_items(self) -> int:
         return sum(item.quantity for item in self.items.all())
 
-    @property
-    def total_price(self):
-        from decimal import Decimal
-
-        total = Decimal("0.00")
-        for item in self.items.select_related("product"):
-            total += item.product.price * item.quantity
-        return total
 
 
 class CartItem(models.Model):
@@ -90,9 +81,49 @@ class CartItem(models.Model):
     def __str__(self) -> str:
         return f"{self.quantity} x {self.product}"
 
-    @property
-    def line_total(self):
-        return self.product.price * self.quantity
+
+
+class CategoryCharacteristic(models.Model):
+    TYPE_TEXT = "text"
+    TYPE_NUMERIC = "numeric"
+    TYPE_CHOICES = [
+        (TYPE_TEXT, "Текст"),
+        (TYPE_NUMERIC, "Число"),
+    ]
+
+    category = models.ForeignKey(
+        Category, related_name="characteristics", on_delete=models.CASCADE
+    )
+    name = models.CharField(max_length=100)
+    char_type = models.CharField(max_length=10, choices=TYPE_CHOICES, default=TYPE_TEXT)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "name"]
+        unique_together = ("category", "name")
+        verbose_name = "Характеристика категории"
+        verbose_name_plural = "Характеристики категорий"
+
+    def __str__(self) -> str:
+        return f"{self.category.name} — {self.name}"
+
+
+class ProductCharacteristic(models.Model):
+    product = models.ForeignKey(
+        Product, related_name="characteristics", on_delete=models.CASCADE
+    )
+    characteristic = models.ForeignKey(
+        CategoryCharacteristic, related_name="values", on_delete=models.CASCADE
+    )
+    value = models.CharField(max_length=500)
+
+    class Meta:
+        ordering = ["characteristic__order", "characteristic__name"]
+        verbose_name = "Характеристика товара"
+        verbose_name_plural = "Характеристики товара"
+
+    def __str__(self) -> str:
+        return f"{self.product.name}: {self.characteristic.name} = {self.value}"
 
 
 class SharedCart(models.Model):

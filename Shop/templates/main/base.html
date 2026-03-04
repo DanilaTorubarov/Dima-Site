@@ -24,7 +24,7 @@
             <div class="header-logo">
                 <img src="/media/hydropoint.svg" alt="Hydra-Point" style="height: 32px;">
             </div>
-            <button class="catalog-button" type="button">
+            <button class="catalog-button" id="catalog-button" type="button">
                 <span class="icon">☰</span>
                 <span>Каталог</span>
             </button>
@@ -62,6 +62,58 @@
             </div>
         </div>
     </header>
+
+    <!-- Catalog drawer -->
+    <div class="catalog-overlay" id="catalog-overlay"></div>
+    <aside class="catalog-drawer" id="catalog-drawer" aria-label="Каталог">
+        <div class="catalog-drawer-header">
+            <span class="catalog-drawer-title">Каталог</span>
+            <button class="catalog-close" id="catalog-close" type="button" aria-label="Закрыть">✕</button>
+        </div>
+        <nav class="catalog-drawer-body">
+            <!-- Root level -->
+            <div class="catalog-level" id="catalog-level-root">
+                {% for cat in catalog_root_categories %}
+                    <div class="catalog-row">
+                        <a href="{% url 'product_list' %}?category={{ cat.slug }}"
+                           class="catalog-row-label catalog-nav-link"
+                           {% if cat.children.all %}data-level="catalog-level-{{ cat.pk }}"{% endif %}>
+                            {{ cat.name }}
+                        </a>
+                        {% if cat.children.all %}
+                            <button class="catalog-row-arrow" type="button"
+                                    data-level="catalog-level-{{ cat.pk }}"
+                                    aria-label="Подкатегории {{ cat.name }}">›</button>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <p class="catalog-empty">Категории не найдены.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Children levels (one per root category that has children) -->
+            {% for cat in catalog_root_categories %}
+                {% if cat.children.all %}
+                    <div class="catalog-level" id="catalog-level-{{ cat.pk }}" hidden>
+                        <button class="catalog-back" type="button">‹ Назад</button>
+                        <a href="{% url 'product_list' %}?category={{ cat.slug }}"
+                           class="catalog-parent-all catalog-nav-link">
+                            Все «{{ cat.name }}»
+                        </a>
+                        {% for child in cat.children.all %}
+                            <div class="catalog-row">
+                                <a href="{% url 'product_list' %}?category={{ child.slug }}"
+                                   class="catalog-row-label catalog-nav-link">
+                                    {{ child.name }}
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </nav>
+    </aside>
+
     <main>
         <div class="page-inner">
             {% block content %}{% endblock %}
@@ -74,6 +126,83 @@
         </div>
     </footer>
 </div>
+
+<script>
+(function () {
+    var drawer  = document.getElementById('catalog-drawer');
+    var overlay = document.getElementById('catalog-overlay');
+    var closeBtn = document.getElementById('catalog-close');
+    var openBtn  = document.getElementById('catalog-button');
+    var STORAGE_KEY = 'catalogDrawerLevel';
+
+    function setLevel(levelId) {
+        drawer.querySelectorAll('.catalog-level').forEach(function (l) {
+            l.hidden = true;
+        });
+        var target = document.getElementById(levelId);
+        if (target) target.hidden = false;
+    }
+
+    function openDrawer(levelId) {
+        setLevel(levelId || 'catalog-level-root');
+        drawer.classList.add('open');
+        overlay.classList.add('visible');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDrawer() {
+        drawer.classList.remove('open');
+        overlay.classList.remove('visible');
+        document.body.style.overflow = '';
+        sessionStorage.removeItem(STORAGE_KEY);
+    }
+
+    openBtn.addEventListener('click', function () {
+        openDrawer('catalog-level-root');
+    });
+
+    closeBtn.addEventListener('click', closeDrawer);
+    overlay.addEventListener('click', closeDrawer);
+
+    drawer.addEventListener('click', function (e) {
+        // Expand arrow: drill into children, no navigation
+        var arrow = e.target.closest('.catalog-row-arrow');
+        if (arrow) {
+            var levelId = arrow.dataset.level;
+            sessionStorage.setItem(STORAGE_KEY, levelId);
+            setLevel(levelId);
+            return;
+        }
+
+        // Back button: return to root level
+        var back = e.target.closest('.catalog-back');
+        if (back) {
+            sessionStorage.removeItem(STORAGE_KEY);
+            setLevel('catalog-level-root');
+            return;
+        }
+
+        // Navigation link
+        var link = e.target.closest('.catalog-nav-link');
+        if (link) {
+            var childLevelId = link.dataset.level;
+            if (childLevelId) {
+                // Root category with children: reopen drawer at children after page load
+                sessionStorage.setItem(STORAGE_KEY, childLevelId);
+            } else {
+                // Leaf or "All" link: clear drawer state
+                sessionStorage.removeItem(STORAGE_KEY);
+            }
+            // Let the href navigate naturally — no preventDefault
+        }
+    });
+
+    // Restore drawer state after navigation (e.g. clicked a root category)
+    var saved = sessionStorage.getItem(STORAGE_KEY);
+    if (saved) {
+        openDrawer(saved);
+    }
+})();
+</script>
 </body>
 </html>
-
