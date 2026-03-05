@@ -1,0 +1,148 @@
+{% extends "main/base.html" %}
+
+{% block title %}Каталог{% endblock %}
+{% load static %}
+{% block content %}
+
+<h1 style="font-size: 48px;">Как оформить заказ?</h1>
+<ol style="margin-left: 48px; font-size: 24px;">
+    <li>Добавить в корзину нужные товары, скопировать ссылку на корзину.</li>
+    <li>Написать в <a href="https://t.me/jnrh770" target="_blank">телеграмм</a> или по номеру <a href="tel:+79175888990">+7(917)-588-89-90</a></li>
+    <a target="_blank" href="https://t.me/jnrh770" style="font-size: 24px; align-content: center; vertical-align: center; display: flex;"><img src="/media/telegram.svg" alt="Телеграм" style="height: 36px; margin-right: 8px;"> - написать в телеграмм</a>
+</ol>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    'use strict';
+
+    /* ── Collapsible filter sections ─────────────────────── */
+    document.querySelectorAll('.filter-toggle').forEach(function (btn) {
+        var bodyId = btn.dataset.target;
+        var body = document.getElementById(bodyId);
+        if (!body) return;
+
+        if (body.classList.contains('open')) {
+            btn.classList.add('open');
+        }
+
+        btn.addEventListener('click', function () {
+            var isOpen = body.classList.toggle('open');
+            btn.classList.toggle('open', isOpen);
+        });
+    });
+
+    /* ── Dual range slider ───────────────────────────────── */
+    document.querySelectorAll('.range-slider-wrap').forEach(function (wrap) {
+        var globalMin = parseFloat(wrap.dataset.min);
+        var globalMax = parseFloat(wrap.dataset.max);
+        var selMin    = parseFloat(wrap.dataset.selMin);
+        var selMax    = parseFloat(wrap.dataset.selMax);
+        var isInt     = wrap.dataset.isInt === '1';
+
+        var track    = wrap.querySelector('.range-track');
+        var fill     = wrap.querySelector('.range-fill');
+        var thumbMin = wrap.querySelector('.range-thumb-min');
+        var thumbMax = wrap.querySelector('.range-thumb-max');
+        var labelMin = wrap.querySelector('[data-role="min-label"]');
+        var labelMax = wrap.querySelector('[data-role="max-label"]');
+        var inputMin = wrap.querySelector('[data-role="min-input"]');
+        var inputMax = wrap.querySelector('[data-role="max-input"]');
+
+        if (globalMin === globalMax) {
+            wrap.style.opacity = '0.45';
+            wrap.style.pointerEvents = 'none';
+            return;
+        }
+
+        var curMin = isNaN(selMin) ? globalMin : selMin;
+        var curMax = isNaN(selMax) ? globalMax : selMax;
+
+        function pct(val) { return (val - globalMin) / (globalMax - globalMin); }
+        function valFromPct(p) { return globalMin + p * (globalMax - globalMin); }
+        function fmt(val) {
+            if (isInt) return String(Math.round(val));
+            return val.toFixed(2).replace(/\.?0+$/, '');
+        }
+
+        function render(minVal, maxVal) {
+            var pMin = pct(minVal) * 100;
+            var pMax = pct(maxVal) * 100;
+            fill.style.left  = pMin + '%';
+            fill.style.width = (pMax - pMin) + '%';
+            thumbMin.style.left = pMin + '%';
+            thumbMax.style.left = pMax + '%';
+            labelMin.textContent = fmt(minVal);
+            labelMax.textContent = fmt(maxVal);
+            inputMin.value = (minVal === globalMin) ? '' : fmt(minVal);
+            inputMax.value = (maxVal === globalMax) ? '' : fmt(maxVal);
+        }
+
+        render(curMin, curMax);
+
+        function makeDraggable(thumb, isMinThumb) {
+            function onMove(clientX) {
+                var rect = track.getBoundingClientRect();
+                var p = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+                var val = valFromPct(p);
+                if (isMinThumb) curMin = Math.min(val, curMax);
+                else            curMax = Math.max(val, curMin);
+                render(curMin, curMax);
+            }
+
+            function stopDrag() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('touchmove', onTouchMove);
+                document.removeEventListener('touchend', stopDrag);
+                thumb.style.cursor = '';
+            }
+            function onMouseMove(e) { onMove(e.clientX); }
+            function onTouchMove(e) { e.preventDefault(); onMove(e.touches[0].clientX); }
+
+            thumb.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+                thumb.style.cursor = 'grabbing';
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', stopDrag);
+            });
+            thumb.addEventListener('touchstart', function () {
+                document.addEventListener('touchmove', onTouchMove, { passive: false });
+                document.addEventListener('touchend', stopDrag);
+            }, { passive: true });
+
+            thumb.addEventListener('keydown', function (e) {
+                var step = (globalMax - globalMin) / 100;
+                if (isInt) step = Math.max(1, Math.round(step));
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (isMinThumb) curMin = Math.max(globalMin, curMin - step);
+                    else curMax = Math.max(curMin, curMax - step);
+                    render(curMin, curMax);
+                } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (isMinThumb) curMin = Math.min(curMax, curMin + step);
+                    else curMax = Math.min(globalMax, curMax + step);
+                    render(curMin, curMax);
+                }
+            });
+        }
+
+        makeDraggable(thumbMin, true);
+        makeDraggable(thumbMax, false);
+
+        track.addEventListener('click', function (e) {
+            if (e.target === thumbMin || e.target === thumbMax) return;
+            var rect = track.getBoundingClientRect();
+            var p = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            var val = valFromPct(p);
+            if (Math.abs(val - curMin) <= Math.abs(val - curMax)) curMin = Math.min(val, curMax);
+            else curMax = Math.max(val, curMin);
+            render(curMin, curMax);
+        });
+    });
+})();
+</script>
+{% endblock %}

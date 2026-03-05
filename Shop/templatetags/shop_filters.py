@@ -6,6 +6,14 @@ from django.utils.html import conditional_escape, mark_safe
 register = template.Library()
 
 
+@register.simple_tag(takes_context=True)
+def url_with_page(context, page_num):
+    """Return current query string with page replaced."""
+    params = context["request"].GET.copy()
+    params["page"] = page_num
+    return "?" + params.urlencode()
+
+
 @register.filter(needs_autoescape=True)
 def render_description(value, autoescape=True):
     """

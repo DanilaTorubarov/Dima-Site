@@ -3,18 +3,12 @@
 {% block title %}Каталог{% endblock %}
 
 {% block content %}
-<section class="hero">
-    <div>
-        <div class="hero-title">Широкие трапы<br>скоро в наличии</div>
-        <div class="hero-subtitle">
-            Современные решения для ванной комнаты: душевые системы, смесители и аксессуары.
-        </div>
-        <a href="#catalog" class="hero-cta">Перейти в каталог</a>
-    </div>
-    <div class="hero-placeholder"></div>
-</section>
 
-<section class="homepage-categories" id="catalog">
+<div style="align-items: center; display: flex; justify-content: center; margin-bottom: 2rem;">
+    <img src="/media/banner.png" alt="" style="width:75%;">
+</div>
+
+<!-- <section class="homepage-categories" id="catalog">
     <div class="homepage-categories-title">Категории товаров</div>
     <div class="category-tiles">
         {% for category in catalog_root_categories %}
@@ -26,35 +20,82 @@
             <p style="color: var(--text-muted);">Категории ещё не созданы.</p>
         {% endfor %}
     </div>
-</section>
+</section> -->
 
 <section>
     <div class="layout-grid">
         <aside class="sidebar">
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">Категории</div>
-                <a href="{% url 'product_list' %}"
-                   class="{% if not active_category_slug %}active{% endif %}">Все товары</a>
-                {% for category in categories %}
-                    <a href="{% url 'product_list' %}?category={{ category.slug }}"
-                       class="{% if category.slug == active_category_slug %}active{% endif %}">
-                        {{ category.name }}
-                    </a>
-                {% endfor %}
-            </div>
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">Поиск</div>
-                <form method="get">
+            <form method="get" id="filter-form">
+                {% if active_category_slug %}
+                    <input type="hidden" name="category" value="{{ active_category_slug }}">
+                {% endif %}
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Поиск</div>
                     <input class="sidebar-input" type="text" name="q"
                            placeholder="Название товара" value="{{ search_query }}">
                     <input class="sidebar-input" type="text" name="sku"
                            placeholder="Артикул" value="{{ sku_query }}">
-                    {% if active_category_slug %}
-                        <input type="hidden" name="category" value="{{ active_category_slug }}">
-                    {% endif %}
-                    <button type="submit" class="btn btn-secondary" style="width: 100%;">Показать</button>
-                </form>
-            </div>
+                </div>
+
+                {% for cf in char_filters %}
+                <div class="sidebar-section filter-section">
+                    <button type="button"
+                            class="filter-toggle{% if cf.is_active %} filter-toggle--active{% endif %}"
+                            data-target="filter-body-{{ cf.char.id }}">
+                        <span class="filter-toggle-name">{{ cf.char.name }}</span>
+                        {% if cf.is_active %}<span class="filter-dot"></span>{% endif %}
+                        <span class="filter-toggle-icon">▾</span>
+                    </button>
+                    <div class="filter-body{% if cf.is_active %} open{% endif %}" id="filter-body-{{ cf.char.id }}">
+                        {% if cf.type == "numeric" %}
+                            <div class="range-slider-wrap"
+                                 data-min="{{ cf.global_min }}"
+                                 data-max="{{ cf.global_max }}"
+                                 data-sel-min="{{ cf.selected_min }}"
+                                 data-sel-max="{{ cf.selected_max }}"
+                                 data-param="{{ cf.param_key }}"
+                                 data-is-int="{{ cf.is_int|yesno:'1,0' }}">
+                                <div class="range-display">
+                                    <span class="range-val" data-role="min-label">{{ cf.selected_min }}</span>
+                                    <span class="range-sep">—</span>
+                                    <span class="range-val" data-role="max-label">{{ cf.selected_max }}</span>
+                                </div>
+                                <div class="range-track">
+                                    <div class="range-fill"></div>
+                                    <div class="range-thumb range-thumb-min" tabindex="0" role="slider"
+                                         aria-label="Минимум {{ cf.char.name }}"></div>
+                                    <div class="range-thumb range-thumb-max" tabindex="0" role="slider"
+                                         aria-label="Максимум {{ cf.char.name }}"></div>
+                                </div>
+                                <input type="hidden" name="{{ cf.param_key }}_min" data-role="min-input"
+                                       value="{% if cf.is_active %}{{ cf.selected_min }}{% endif %}">
+                                <input type="hidden" name="{{ cf.param_key }}_max" data-role="max-input"
+                                       value="{% if cf.is_active %}{{ cf.selected_max }}{% endif %}">
+                            </div>
+                        {% else %}
+                            <div class="filter-options">
+                                {% for val in cf.values %}
+                                    <label class="filter-option">
+                                        <input type="checkbox" name="{{ cf.param_key }}" value="{{ val }}"
+                                               {% if val in cf.selected_values %}checked{% endif %}>
+                                        <span class="filter-option-label">{{ val }}</span>
+                                    </label>
+                                {% empty %}
+                                    <span class="filter-empty">Нет вариантов</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <button type="submit" class="btn btn-secondary" style="width:100%;margin-top:.25rem;">Показать</button>
+                {% if has_active_char_filter or search_query or sku_query %}
+                    <a href="{% url 'product_list' %}{% if active_category_slug %}?category={{ active_category_slug }}{% endif %}"
+                       class="filter-reset-link">Сбросить фильтры</a>
+                {% endif %}
+            </form>
         </aside>
 
         <div>
@@ -79,9 +120,9 @@
                 {% for product in products %}
                     <article class="card">
                         {% if product.image %}
-                            <div style="margin-bottom: 0.85rem;">
+                            <div style="margin-bottom: 0.85rem; align-items: center; align-content: center; justify-content: center; display:flex;">
                                 <img src="{{ product.image.url }}" alt="{{ product.name }}"
-                                     style="width:100%; height:180px; object-fit:cover; border-radius:8px;">
+                                     style="width:75%; height:180px; object-fit:cover; border-radius:8px;">
                             </div>
                         {% endif %}
                         <h2>
@@ -111,4 +152,138 @@
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    'use strict';
+
+    /* ── Collapsible filter sections ─────────────────────── */
+    document.querySelectorAll('.filter-toggle').forEach(function (btn) {
+        var bodyId = btn.dataset.target;
+        var body = document.getElementById(bodyId);
+        if (!body) return;
+
+        if (body.classList.contains('open')) {
+            btn.classList.add('open');
+        }
+
+        btn.addEventListener('click', function () {
+            var isOpen = body.classList.toggle('open');
+            btn.classList.toggle('open', isOpen);
+        });
+    });
+
+    /* ── Dual range slider ───────────────────────────────── */
+    document.querySelectorAll('.range-slider-wrap').forEach(function (wrap) {
+        var globalMin = parseFloat(wrap.dataset.min);
+        var globalMax = parseFloat(wrap.dataset.max);
+        var selMin    = parseFloat(wrap.dataset.selMin);
+        var selMax    = parseFloat(wrap.dataset.selMax);
+        var isInt     = wrap.dataset.isInt === '1';
+
+        var track    = wrap.querySelector('.range-track');
+        var fill     = wrap.querySelector('.range-fill');
+        var thumbMin = wrap.querySelector('.range-thumb-min');
+        var thumbMax = wrap.querySelector('.range-thumb-max');
+        var labelMin = wrap.querySelector('[data-role="min-label"]');
+        var labelMax = wrap.querySelector('[data-role="max-label"]');
+        var inputMin = wrap.querySelector('[data-role="min-input"]');
+        var inputMax = wrap.querySelector('[data-role="max-input"]');
+
+        if (globalMin === globalMax) {
+            wrap.style.opacity = '0.45';
+            wrap.style.pointerEvents = 'none';
+            return;
+        }
+
+        var curMin = isNaN(selMin) ? globalMin : selMin;
+        var curMax = isNaN(selMax) ? globalMax : selMax;
+
+        function pct(val) { return (val - globalMin) / (globalMax - globalMin); }
+        function valFromPct(p) { return globalMin + p * (globalMax - globalMin); }
+        function fmt(val) {
+            if (isInt) return String(Math.round(val));
+            return val.toFixed(2).replace(/\.?0+$/, '');
+        }
+
+        function render(minVal, maxVal) {
+            var pMin = pct(minVal) * 100;
+            var pMax = pct(maxVal) * 100;
+            fill.style.left  = pMin + '%';
+            fill.style.width = (pMax - pMin) + '%';
+            thumbMin.style.left = pMin + '%';
+            thumbMax.style.left = pMax + '%';
+            labelMin.textContent = fmt(minVal);
+            labelMax.textContent = fmt(maxVal);
+            inputMin.value = (minVal === globalMin) ? '' : fmt(minVal);
+            inputMax.value = (maxVal === globalMax) ? '' : fmt(maxVal);
+        }
+
+        render(curMin, curMax);
+
+        function makeDraggable(thumb, isMinThumb) {
+            function onMove(clientX) {
+                var rect = track.getBoundingClientRect();
+                var p = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+                var val = valFromPct(p);
+                if (isMinThumb) curMin = Math.min(val, curMax);
+                else            curMax = Math.max(val, curMin);
+                render(curMin, curMax);
+            }
+
+            function stopDrag() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('touchmove', onTouchMove);
+                document.removeEventListener('touchend', stopDrag);
+                thumb.style.cursor = '';
+            }
+            function onMouseMove(e) { onMove(e.clientX); }
+            function onTouchMove(e) { e.preventDefault(); onMove(e.touches[0].clientX); }
+
+            thumb.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+                thumb.style.cursor = 'grabbing';
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', stopDrag);
+            });
+            thumb.addEventListener('touchstart', function () {
+                document.addEventListener('touchmove', onTouchMove, { passive: false });
+                document.addEventListener('touchend', stopDrag);
+            }, { passive: true });
+
+            thumb.addEventListener('keydown', function (e) {
+                var step = (globalMax - globalMin) / 100;
+                if (isInt) step = Math.max(1, Math.round(step));
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (isMinThumb) curMin = Math.max(globalMin, curMin - step);
+                    else curMax = Math.max(curMin, curMax - step);
+                    render(curMin, curMax);
+                } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (isMinThumb) curMin = Math.min(curMax, curMin + step);
+                    else curMax = Math.min(globalMax, curMax + step);
+                    render(curMin, curMax);
+                }
+            });
+        }
+
+        makeDraggable(thumbMin, true);
+        makeDraggable(thumbMax, false);
+
+        track.addEventListener('click', function (e) {
+            if (e.target === thumbMin || e.target === thumbMax) return;
+            var rect = track.getBoundingClientRect();
+            var p = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            var val = valFromPct(p);
+            if (Math.abs(val - curMin) <= Math.abs(val - curMax)) curMin = Math.min(val, curMax);
+            else curMax = Math.max(val, curMin);
+            render(curMin, curMax);
+        });
+    });
+})();
+</script>
 {% endblock %}

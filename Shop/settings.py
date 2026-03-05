@@ -53,7 +53,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'Shop.middleware.GuestCartMiddleware',
 ]
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+
+# Guest session carts expire after 7 days
+SESSION_COOKIE_AGE = 7 * 24 * 60 * 60
 
 ROOT_URLCONF = 'Shop.urls'
 

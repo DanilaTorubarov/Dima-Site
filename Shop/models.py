@@ -152,3 +152,17 @@ class SharedCartItem(models.Model):
         return f"{self.quantity} × {self.product}"
 
 
+class GuestCart(models.Model):
+    """Stores guest (unauthenticated) cart data keyed by IP address."""
+    ip_address = models.GenericIPAddressField(unique=True)
+    cart_data = models.JSONField(default=dict)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Корзина гостя"
+        verbose_name_plural = "Корзины гостей"
+
+    def __str__(self) -> str:
+        return f"Guest cart {self.ip_address}"
+
+

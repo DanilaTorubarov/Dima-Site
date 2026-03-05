@@ -10,6 +10,7 @@ urlpatterns = [
     path("accounts/register/", views.register, name="register"),
     path("accounts/", include("django.contrib.auth.urls")),
     path("", views.product_list, name="product_list"),
+    path("home/", views.product_list, name="home"),
     path("products/<int:pk>/", views.product_detail, name="product_detail"),
     path("cart/", views.cart_detail, name="cart_detail"),
     path("cart/add/<int:pk>/", views.add_to_cart, name="add_to_cart"),
@@ -21,5 +22,6 @@ urlpatterns = [
     path("cart/share/", views.share_cart, name="share_cart"),
     path("cart/shared/<uuid:pk>/", views.shared_cart_detail, name="shared_cart_detail"),
     path("account/", views.account_dashboard, name="account_dashboard"),
+    path("howtobuy/", views.howtobuy, name="howtobuy"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

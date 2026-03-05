@@ -1,12 +1,16 @@
+from difflib import get_close_matches
+
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.forms import UserCreationForm
 
-from .models import Cart, CartItem, Category, Product, SharedCart, SharedCartItem
+from .models import Cart, CartItem, Category, CategoryCharacteristic, Product, ProductCharacteristic, SharedCart, SharedCartItem
 
 
 def _get_or_create_cart_for_user(user):
@@ -35,36 +39,196 @@ def _get_category_descendant_ids(root):
     return ids
 
 
+def _build_char_filters(request, current_category, base_products):
+    """
+    Return a list of filter dicts for the sidebar and apply them to the product queryset.
+    Each dict has: char, type, param_key, and type-specific fields.
+    Returns (char_filters, filtered_products).
+    """
+    if not current_category:
+        return [], base_products
+
+    characteristics = CategoryCharacteristic.objects.filter(
+        category=current_category
+    ).order_by("order", "name")
+
+    products = base_products
+    char_filters = []
+
+    for char in characteristics:
+        param_key = f"char_{char.id}"
+
+        if char.char_type == CategoryCharacteristic.TYPE_NUMERIC:
+            # Compute global min/max from base products (before applying this filter)
+            raw_values = list(
+                ProductCharacteristic.objects.filter(
+                    characteristic=char, product__in=base_products
+                ).values_list("value", flat=True)
+            )
+            float_values = []
+            for v in raw_values:
+                try:
+                    float_values.append(float(v))
+                except (ValueError, TypeError):
+                    pass
+
+            if not float_values:
+                continue
+
+            global_min = min(float_values)
+            global_max = max(float_values)
+            is_int = all(v == int(v) for v in float_values)
+
+            sel_min_str = request.GET.get(f"{param_key}_min", "").strip()
+            sel_max_str = request.GET.get(f"{param_key}_max", "").strip()
+
+            try:
+                sel_min = float(sel_min_str) if sel_min_str else global_min
+            except ValueError:
+                sel_min = global_min
+            try:
+                sel_max = float(sel_max_str) if sel_max_str else global_max
+            except ValueError:
+                sel_max = global_max
+
+            # Apply filter only when the user actually sent params
+            if sel_min_str or sel_max_str:
+                matching_ids = set()
+                for pc in ProductCharacteristic.objects.filter(
+                    characteristic=char, product__in=products
+                ).values_list("product_id", "value"):
+                    try:
+                        val = float(pc[1])
+                        if sel_min <= val <= sel_max:
+                            matching_ids.add(pc[0])
+                    except (ValueError, TypeError):
+                        pass
+                products = products.filter(id__in=matching_ids)
+
+            def _fmt(v, is_int=is_int):
+                return int(round(v)) if is_int else round(v, 2)
+
+            char_filters.append({
+                "char": char,
+                "type": "numeric",
+                "param_key": param_key,
+                "global_min": _fmt(global_min),
+                "global_max": _fmt(global_max),
+                "selected_min": _fmt(sel_min),
+                "selected_max": _fmt(sel_max),
+                "is_int": is_int,
+                "is_active": sel_min_str != "" or sel_max_str != "",
+            })
+
+        else:  # TYPE_TEXT
+            all_values = list(
+                ProductCharacteristic.objects.filter(
+                    characteristic=char, product__in=base_products
+                ).values_list("value", flat=True).distinct().order_by("value")
+            )
+
+            if not all_values:
+                continue
+
+            selected_values = request.GET.getlist(param_key)
+
+            if selected_values:
+                matching_ids = list(
+                    ProductCharacteristic.objects.filter(
+                        characteristic=char,
+                        product__in=products,
+                        value__in=selected_values,
+                    ).values_list("product_id", flat=True)
+                )
+                products = products.filter(id__in=matching_ids)
+
+            char_filters.append({
+                "char": char,
+                "type": "text",
+                "param_key": param_key,
+                "values": all_values,
+                "selected_values": selected_values,
+                "is_active": bool(selected_values),
+            })
+
+    return char_filters, products
+
+
+PRODUCTS_PER_PAGE = 30
+
+
+def _smart_search(base_qs, query):
+    """
+    Return (queryset, suggestions).
+    1. Try exact icontains match.
+    2. If no results, try every word (OR logic).
+    3. If still no results, use difflib for fuzzy name suggestions.
+    """
+    # Primary: whole-phrase containment
+    qs = base_qs.filter(name__icontains=query)
+    if qs.exists():
+        return qs, []
+
+    # Secondary: any word matches (ignore short stop-words)
+    words = [w for w in query.split() if len(w) > 1]
+    if words:
+        q = Q()
+        for w in words:
+            q |= Q(name__icontains=w)
+        qs = base_qs.filter(q)
+        if qs.exists():
+            return qs, []
+
+    # Tertiary: fuzzy suggestions from all available product names
+    all_names = list(
+        Product.objects.filter(available=True).values_list("name", flat=True)
+    )
+    suggestions = get_close_matches(query, all_names, n=5, cutoff=0.45)
+    return base_qs.none(), suggestions
+
+
 def product_list(request):
-    products = Product.objects.select_related("category").filter(available=True)
+    base_products = Product.objects.select_related("category").filter(available=True)
     categories = Category.objects.all()
 
     search_query = request.GET.get("q", "").strip()
     sku_query = request.GET.get("sku", "").strip()
     category_slug = request.GET.get("category", "").strip()
+    search_suggestions = []
 
     if search_query:
-        products = products.filter(name__icontains=search_query)
+        base_products, search_suggestions = _smart_search(base_products, search_query)
 
     if sku_query:
-        products = products.filter(sku__iexact=sku_query)
+        base_products = base_products.filter(sku__icontains=sku_query)
 
     current_category = None
     category_breadcrumb = []
     if category_slug:
         current_category = get_object_or_404(Category, slug=category_slug)
         ids = _get_category_descendant_ids(current_category)
-        products = products.filter(category_id__in=ids)
+        base_products = base_products.filter(category_id__in=ids)
         category_breadcrumb = _get_category_ancestors(current_category)
 
+    char_filters, products = _build_char_filters(request, current_category, base_products)
+
+    has_active_char_filter = any(cf["is_active"] for cf in char_filters)
+
+    paginator = Paginator(products, PRODUCTS_PER_PAGE)
+    page_obj = paginator.get_page(request.GET.get("page", 1))
+
     context = {
-        "products": products,
+        "products": page_obj,
+        "page_obj": page_obj,
         "categories": categories,
         "active_category_slug": category_slug,
         "search_query": search_query,
         "sku_query": sku_query,
         "current_category": current_category,
         "category_breadcrumb": category_breadcrumb,
+        "char_filters": char_filters,
+        "has_active_char_filter": has_active_char_filter,
+        "search_suggestions": search_suggestions,
     }
     return render(request, "main/product_list.html", context)
 
@@ -301,3 +465,5 @@ def register(request):
 
     return render(request, "registration/register.html", {"form": form})
 
+def howtobuy(request):
+    return render(request, "main/howtobuy.html")

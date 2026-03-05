@@ -5,25 +5,25 @@
 
 {% block content %}
 {% if category_breadcrumb %}
-    <nav class="breadcrumbs">
-        <a href="{% url 'product_list' %}">Каталог</a>
-        {% for cat in category_breadcrumb %}
-            <span class="sep">›</span>
-            <a href="{% url 'product_list' %}?category={{ cat.slug }}"
-               {% if forloop.last %}class="crumb-active"{% endif %}>
-                {{ cat.name }}
-            </a>
-        {% endfor %}
-    </nav>
+<nav class="breadcrumbs">
+    <a href="{% url 'product_list' %}">Каталог</a>
+    {% for cat in category_breadcrumb %}
+    <span class="sep">›</span>
+    <a href="{% url 'product_list' %}?category={{ cat.slug }}"
+       {% if forloop.last %}class="crumb-active"{% endif %}>
+        {{ cat.name }}
+    </a>
+    {% endfor %}
+</nav>
 {% endif %}
 
 <div class="product-layout">
     <!-- Image -->
     <div class="product-image">
         {% if product.image %}
-            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+        <img src="{{ product.image.url }}" alt="{{ product.name }}">
         {% else %}
-            <div class="product-image-placeholder">📦</div>
+        <div class="product-image-placeholder">📦</div>
         {% endif %}
     </div>
 
@@ -32,26 +32,26 @@
         <h1>{{ product.name }}</h1>
         <div class="product-sku">Артикул: {{ product.sku }}</div>
         <a href="{% url 'product_list' %}?category={{ product.category.slug }}"
-           class="product-category">
-            {{ product.category.name }}
-        </a>
-
-        {% if product.description %}
-            <div class="product-description">{{ product.description|render_description }}</div>
-        {% endif %}
+           class="product-category">{{ product.category.name }}</a>
 
         {% if characteristics %}
-            <dl class="product-chars">
-                {% for char, values in characteristics %}
-                    <div class="product-chars-row">
-                        <dt>{{ char.name }}</dt>
-                        <dd>{{ values|join:" / " }}</dd>
-                    </div>
-                {% endfor %}
-            </dl>
+        <dl class="product-chars product-chars--preview">
+            {% for char, values in characteristics|slice:":4" %}
+            <div class="product-chars-row">
+                <dt>{{ char.name }}</dt>
+                <dd>{{ values|join:" / " }}</dd>
+            </div>
+            {% endfor %}
+        </dl>
+        {% if characteristics|length > 4 %}
+        <a href="#product-tabs" class="product-chars-more" id="show-chars-tab">
+            Все характеристики →
+        </a>
+        {% endif %}
         {% endif %}
 
-        <form method="post" action="{% url 'add_to_cart' product.pk %}" class="product-add-form">
+        <form method="post" action="{% url 'add_to_cart' product.pk %}"
+              class="product-add-form">
             {% csrf_token %}
             <label class="qty-label">
                 Количество:
@@ -61,4 +61,77 @@
         </form>
     </div>
 </div>
+
+{% if product.description or characteristics %}
+<div class="product-tabs" id="product-tabs">
+    <nav class="tab-nav" role="tablist">
+        {% if product.description %}
+        <button class="tab-btn tab-btn--active" data-tab="desc" role="tab"
+                aria-selected="true" aria-controls="tab-desc">Описание</button>
+        {% endif %}
+        {% if characteristics %}
+        <button class="tab-btn{% if not product.description %} tab-btn--active{% endif %}"
+                data-tab="chars" role="tab"
+                aria-selected="{% if not product.description %}true{% else %}false{% endif %}"
+                aria-controls="tab-chars">Характеристики</button>
+        {% endif %}
+    </nav>
+
+    {% if product.description %}
+    <div class="tab-panel tab-panel--active" id="tab-desc" role="tabpanel">
+        <div class="product-description">{{ product.description|render_description }}</div>
+    </div>
+    {% endif %}
+
+    {% if characteristics %}
+    <div class="tab-panel{% if not product.description %} tab-panel--active{% endif %}"
+         id="tab-chars" role="tabpanel">
+        <dl class="product-chars">
+            {% for char, values in characteristics %}
+            <div class="product-chars-row">
+                <dt>{{ char.name }}</dt>
+                <dd>{{ values|join:" / " }}</dd>
+            </div>
+            {% endfor %}
+        </dl>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var allBtns = document.querySelectorAll('.tab-btn');
+    var allPanels = document.querySelectorAll('.tab-panel');
+
+    allBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            allBtns.forEach(function (b) {
+                b.classList.remove('tab-btn--active');
+                b.setAttribute('aria-selected', 'false');
+            });
+            allPanels.forEach(function (p) { p.classList.remove('tab-panel--active'); });
+
+            btn.classList.add('tab-btn--active');
+            btn.setAttribute('aria-selected', 'true');
+            var panel = document.getElementById('tab-' + btn.dataset.tab);
+            if (panel) panel.classList.add('tab-panel--active');
+        });
+    });
+
+    // "Все характеристики →" opens the chars tab and scrolls
+    var charsLink = document.getElementById('show-chars-tab');
+    if (charsLink) {
+        charsLink.addEventListener('click', function (e) {
+            e.preventDefault();
+            var charsBtn = document.querySelector('.tab-btn[data-tab="chars"]');
+            if (charsBtn) charsBtn.click();
+            var tabs = document.getElementById('product-tabs');
+            if (tabs) tabs.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    }
+})();
+</script>
 {% endblock %}

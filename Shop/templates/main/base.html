@@ -12,17 +12,16 @@
 <div class="shell">
     <div class="topbar">
         <div class="topbar-inner">
-            <div>Интернет‑магазин</div>
+            <div>Hydra-Point</div>
             <div class="topbar-links">
-                <a href="#">Как купить</a>
-                <a href="#">Контакты</a>
+                <a href="{% url 'howtobuy' %}">Как купить</a>
             </div>
         </div>
     </div>
     <header>
         <div class="header-main">
             <div class="header-logo">
-                <img src="/media/hydropoint.svg" alt="Hydra-Point" style="height: 32px;">
+                <a href="{% url 'product_list' %}"><img src="/media/hydropoint.svg" alt="Hydra-Point" style="height: 64px;"></a>
             </div>
             <button class="catalog-button" id="catalog-button" type="button">
                 <span class="icon">☰</span>
@@ -75,15 +74,19 @@
             <div class="catalog-level" id="catalog-level-root">
                 {% for cat in catalog_root_categories %}
                     <div class="catalog-row">
-                        <a href="{% url 'product_list' %}?category={{ cat.slug }}"
-                           class="catalog-row-label catalog-nav-link"
-                           {% if cat.children.all %}data-level="catalog-level-{{ cat.pk }}"{% endif %}>
-                            {{ cat.name }}
-                        </a>
                         {% if cat.children.all %}
-                            <button class="catalog-row-arrow" type="button"
+                            <button class="catalog-drill"
                                     data-level="catalog-level-{{ cat.pk }}"
-                                    aria-label="Подкатегории {{ cat.name }}">›</button>
+                                    type="button"
+                                    aria-label="Открыть подкатегории {{ cat.name }}">
+                                <span>{{ cat.name }}</span>
+                                <span class="catalog-chevron">›</span>
+                            </button>
+                        {% else %}
+                            <a href="{% url 'product_list' %}?category={{ cat.slug }}"
+                               class="catalog-row-label catalog-nav-link">
+                                {{ cat.name }}
+                            </a>
                         {% endif %}
                     </div>
                 {% empty %}
@@ -91,14 +94,14 @@
                 {% endfor %}
             </div>
 
-            <!-- Children levels (one per root category that has children) -->
+            <!-- Children levels -->
             {% for cat in catalog_root_categories %}
                 {% if cat.children.all %}
                     <div class="catalog-level" id="catalog-level-{{ cat.pk }}" hidden>
                         <button class="catalog-back" type="button">‹ Назад</button>
                         <a href="{% url 'product_list' %}?category={{ cat.slug }}"
                            class="catalog-parent-all catalog-nav-link">
-                            Все «{{ cat.name }}»
+                            Все товары «{{ cat.name }}»
                         </a>
                         {% for child in cat.children.all %}
                             <div class="catalog-row">
@@ -129,22 +132,54 @@
 
 <script>
 (function () {
-    var drawer  = document.getElementById('catalog-drawer');
-    var overlay = document.getElementById('catalog-overlay');
+    var drawer   = document.getElementById('catalog-drawer');
+    var overlay  = document.getElementById('catalog-overlay');
     var closeBtn = document.getElementById('catalog-close');
     var openBtn  = document.getElementById('catalog-button');
-    var STORAGE_KEY = 'catalogDrawerLevel';
 
-    function setLevel(levelId) {
-        drawer.querySelectorAll('.catalog-level').forEach(function (l) {
-            l.hidden = true;
-        });
-        var target = document.getElementById(levelId);
-        if (target) target.hidden = false;
+    var ANIM_CLASSES = [
+        'catalog-level-exit-left', 'catalog-level-exit-right',
+        'catalog-level-enter-right', 'catalog-level-enter-left'
+    ];
+
+    function cleanAnim(el) {
+        ANIM_CLASSES.forEach(function (c) { el.classList.remove(c); });
     }
 
-    function openDrawer(levelId) {
-        setLevel(levelId || 'catalog-level-root');
+    function setLevel(levelId, direction) {
+        var current = drawer.querySelector('.catalog-level:not([hidden])');
+        var target  = document.getElementById(levelId);
+        if (!target || current === target) return;
+
+        var exitClass  = direction === 'back' ? 'catalog-level-exit-right' : 'catalog-level-exit-left';
+        var enterClass = direction === 'back' ? 'catalog-level-enter-left'  : 'catalog-level-enter-right';
+
+        function showTarget() {
+            target.hidden = false;
+            target.classList.add(enterClass);
+            target.addEventListener('animationend', function () {
+                cleanAnim(target);
+            }, { once: true });
+        }
+
+        if (current && direction) {
+            cleanAnim(current);
+            current.classList.add(exitClass);
+            current.addEventListener('animationend', function () {
+                cleanAnim(current);
+                current.hidden = true;
+                showTarget();
+            }, { once: true });
+        } else {
+            if (current) current.hidden = true;
+            showTarget();
+        }
+    }
+
+    function openDrawer() {
+        drawer.querySelectorAll('.catalog-level').forEach(function (l) { l.hidden = true; });
+        var root = document.getElementById('catalog-level-root');
+        if (root) { root.hidden = false; cleanAnim(root); }
         drawer.classList.add('open');
         overlay.classList.add('visible');
         document.body.style.overflow = 'hidden';
@@ -154,55 +189,33 @@
         drawer.classList.remove('open');
         overlay.classList.remove('visible');
         document.body.style.overflow = '';
-        sessionStorage.removeItem(STORAGE_KEY);
     }
 
-    openBtn.addEventListener('click', function () {
-        openDrawer('catalog-level-root');
-    });
-
+    openBtn.addEventListener('click', openDrawer);
     closeBtn.addEventListener('click', closeDrawer);
     overlay.addEventListener('click', closeDrawer);
 
     drawer.addEventListener('click', function (e) {
-        // Expand arrow: drill into children, no navigation
-        var arrow = e.target.closest('.catalog-row-arrow');
-        if (arrow) {
-            var levelId = arrow.dataset.level;
-            sessionStorage.setItem(STORAGE_KEY, levelId);
-            setLevel(levelId);
+        // Root category with children: drill into children panel
+        var drill = e.target.closest('.catalog-drill');
+        if (drill) {
+            setLevel(drill.dataset.level, 'forward');
             return;
         }
 
-        // Back button: return to root level
-        var back = e.target.closest('.catalog-back');
-        if (back) {
-            sessionStorage.removeItem(STORAGE_KEY);
-            setLevel('catalog-level-root');
+        // Back button: return to root
+        if (e.target.closest('.catalog-back')) {
+            setLevel('catalog-level-root', 'back');
             return;
         }
 
-        // Navigation link
-        var link = e.target.closest('.catalog-nav-link');
-        if (link) {
-            var childLevelId = link.dataset.level;
-            if (childLevelId) {
-                // Root category with children: reopen drawer at children after page load
-                sessionStorage.setItem(STORAGE_KEY, childLevelId);
-            } else {
-                // Leaf or "All" link: clear drawer state
-                sessionStorage.removeItem(STORAGE_KEY);
-            }
-            // Let the href navigate naturally — no preventDefault
+        // Leaf / child / "Show All": close drawer and follow href
+        if (e.target.closest('.catalog-nav-link')) {
+            closeDrawer();
         }
     });
-
-    // Restore drawer state after navigation (e.g. clicked a root category)
-    var saved = sessionStorage.getItem(STORAGE_KEY);
-    if (saved) {
-        openDrawer(saved);
-    }
 })();
 </script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>
