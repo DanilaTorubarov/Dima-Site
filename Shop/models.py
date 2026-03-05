@@ -14,6 +14,16 @@ class Category(models.Model):
         related_name="children",
         on_delete=models.CASCADE,
     )
+    show_on_homepage = models.BooleanField(
+        default=False,
+        verbose_name="Показывать на главной",
+    )
+    image = models.ImageField(
+        upload_to="category_images/",
+        blank=True,
+        null=True,
+        verbose_name="Изображение (фон на главной)",
+    )
 
     class Meta:
         verbose_name_plural = "Categories"

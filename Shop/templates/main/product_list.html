@@ -8,19 +8,23 @@
     <img class="image-banner" src="/media/banner.png" alt="">
 </a>
 
-<!-- <section class="homepage-categories" id="catalog">
+{% if homepage_categories %}
+<section class="homepage-categories" id="catalog">
     <div class="homepage-categories-title">Категории товаров</div>
     <div class="category-tiles">
-        {% for category in catalog_root_categories %}
-            <a href="{% url 'product_list' %}?category={{ category.slug }}" class="category-tile">
-                <div class="category-tile-title">{{ category.name }}</div>
-                <div class="category-tile-meta">Смотреть товары →</div>
+        {% for category in homepage_categories %}
+            <a href="{% url 'product_list' %}?category={{ category.slug }}"
+               class="category-tile{% if category.image %} category-tile--image{% endif %}"
+               {% if category.image %}style="background-image: url('{{ category.image.url }}');"{% endif %}>
+                <div class="category-tile-body">
+                    <div class="category-tile-title">{{ category.name }}</div>
+                    <div class="category-tile-meta">Смотреть товары →</div>
+                </div>
             </a>
-        {% empty %}
-            <p style="color: var(--text-muted);">Категории ещё не созданы.</p>
         {% endfor %}
     </div>
-</section> -->
+</section>
+{% endif %}
 
 <section>
     <div class="layout-grid">

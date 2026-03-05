@@ -20,9 +20,12 @@ class CategoryCharacteristicInline(admin.TabularInline):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug", "parent")
+    list_display = ("name", "slug", "parent", "show_on_homepage")
+    list_filter = ("show_on_homepage",)
+    list_editable = ("show_on_homepage",)
     prepopulated_fields = {"slug": ("name",)}
     search_fields = ("name",)
+    fields = ("name", "slug", "parent", "show_on_homepage", "image")
     inlines = [CategoryCharacteristicInline]
 
 
