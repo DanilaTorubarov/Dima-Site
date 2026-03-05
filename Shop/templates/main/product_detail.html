@@ -50,15 +50,19 @@
         {% endif %}
         {% endif %}
 
-        <form method="post" action="{% url 'add_to_cart' product.pk %}"
-              class="product-add-form">
-            {% csrf_token %}
-            <label class="qty-label">
-                Количество:
-                <input type="number" name="quantity" value="1" min="1" class="qty-input">
-            </label>
-            <button type="submit" class="btn btn-primary">В корзину</button>
-        </form>
+        {% with qty=cart_quantities|dict_get:product.pk %}
+        <div class="cart-widget cart-widget--large" data-product-id="{{ product.pk }}">
+            {% if qty %}
+                <div class="cart-stepper">
+                    <button class="cart-stepper-btn cart-dec" type="button" aria-label="Уменьшить">−</button>
+                    <span class="cart-stepper-qty">{{ qty }}</span>
+                    <button class="cart-stepper-btn cart-inc" type="button" aria-label="Увеличить">+</button>
+                </div>
+            {% else %}
+                <button class="cart-add-btn" type="button">В корзину</button>
+            {% endif %}
+        </div>
+        {% endwith %}
     </div>
 </div>
 

@@ -23,5 +23,6 @@ urlpatterns = [
     path("cart/shared/<uuid:pk>/", views.shared_cart_detail, name="shared_cart_detail"),
     path("account/", views.account_dashboard, name="account_dashboard"),
     path("howtobuy/", views.howtobuy, name="howtobuy"),
+    path("cart/set/<int:pk>/", views.set_cart_quantity, name="set_cart_quantity"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

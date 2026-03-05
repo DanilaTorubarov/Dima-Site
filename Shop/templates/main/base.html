@@ -8,6 +8,7 @@
     {% load static %}
     <link rel="icon" href="/media/hydropoint.svg" type="image/svg+xml">
     <link rel="stylesheet" href="{% static 'style.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -239,6 +240,87 @@
             closeDrawer();
         }
     });
+})();
+</script>
+<script>
+(function () {
+    var CSRF = document.querySelector('meta[name="csrf-token"]').content;
+
+    function setQty(pk, qty, widget, wasBtn) {
+        fetch('/cart/set/' + pk + '/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': CSRF,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: 'quantity=' + qty
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (wasBtn || data.quantity === 0) {
+                renderWidget(pk, data.quantity, widget, wasBtn);
+            }
+        });
+    }
+
+    function renderWidget(pk, qty, widget, wasBtn) {
+        if (qty > 0) {
+            var stepperClass = wasBtn ? 'cart-stepper cart-stepper--in' : 'cart-stepper';
+            widget.innerHTML =
+                '<div class="' + stepperClass + '">' +
+                    '<button class="cart-stepper-btn cart-dec" type="button" aria-label="Уменьшить">−</button>' +
+                    '<span class="cart-stepper-qty">' + qty + '</span>' +
+                    '<button class="cart-stepper-btn cart-inc" type="button" aria-label="Увеличить">+</button>' +
+                '</div>';
+        } else {
+            widget.innerHTML =
+                '<button class="cart-add-btn" type="button">В корзину</button>';
+        }
+        initWidget(widget);
+    }
+
+    function bumpQty(qtyEl, newVal) {
+        qtyEl.textContent = newVal;
+        qtyEl.classList.remove('cart-stepper-qty--bump');
+        void qtyEl.offsetWidth; /* reflow to restart animation */
+        qtyEl.classList.add('cart-stepper-qty--bump');
+    }
+
+    function initWidget(widget) {
+        var pk = parseInt(widget.dataset.productId, 10);
+
+        var addBtn = widget.querySelector('.cart-add-btn');
+        if (addBtn) {
+            addBtn.addEventListener('click', function () {
+                addBtn.classList.add('cart-add-btn--pressed');
+                setQty(pk, 1, widget, true);
+            });
+            return;
+        }
+
+        var dec = widget.querySelector('.cart-dec');
+        var inc = widget.querySelector('.cart-inc');
+        var qtyEl = widget.querySelector('.cart-stepper-qty');
+
+        dec.addEventListener('click', function () {
+            var cur = parseInt(qtyEl.textContent, 10);
+            var next = Math.max(0, cur - 1);
+            if (next === 0) {
+                setQty(pk, 0, widget, false);
+            } else {
+                bumpQty(qtyEl, next);
+                setQty(pk, next, widget, false);
+            }
+        });
+        inc.addEventListener('click', function () {
+            var cur = parseInt(qtyEl.textContent, 10);
+            bumpQty(qtyEl, cur + 1);
+            setQty(pk, cur + 1, widget, false);
+        });
+    }
+
+    document.querySelectorAll('.cart-widget').forEach(function (w) { initWidget(w); });
 })();
 </script>
 {% block extra_js %}{% endblock %}

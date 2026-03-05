@@ -18,6 +18,22 @@ def _get_or_create_cart_for_user(user):
     return cart
 
 
+def _get_cart_quantities(request):
+    """Return {product_id: quantity} for the current user/session cart."""
+    if request.user.is_authenticated:
+        try:
+            return {item.product_id: item.quantity for item in request.user.cart.items.all()}
+        except Exception:
+            return {}
+    result = {}
+    for k, v in request.session.get("cart", {}).items():
+        try:
+            result[int(k)] = int(v)
+        except (ValueError, TypeError):
+            pass
+    return result
+
+
 def _get_category_ancestors(category):
     chain = []
     current = category
@@ -232,6 +248,7 @@ def product_list(request):
         "has_active_char_filter": has_active_char_filter,
         "search_suggestions": search_suggestions,
         "category_children": category_children,
+        "cart_quantities": _get_cart_quantities(request),
     }
     return render(request, "main/product_list.html", context)
 
@@ -261,6 +278,7 @@ def product_detail(request, pk):
             "product": product,
             "category_breadcrumb": category_breadcrumb,
             "characteristics": characteristics,
+            "cart_quantities": _get_cart_quantities(request),
         },
     )
 
@@ -467,6 +485,39 @@ def register(request):
         form = UserCreationForm()
 
     return render(request, "registration/register.html", {"form": form})
+
+@require_POST
+def set_cart_quantity(request, pk):
+    """Set an exact quantity for a product in the cart (0 = remove). Returns JSON."""
+    product = get_object_or_404(Product, pk=pk, available=True)
+    try:
+        quantity = max(0, int(request.POST.get("quantity", 0)))
+    except (ValueError, TypeError):
+        quantity = 0
+
+    if request.user.is_authenticated:
+        cart = _get_or_create_cart_for_user(request.user)
+        if quantity == 0:
+            CartItem.objects.filter(cart=cart, product=product).delete()
+        else:
+            item, created = CartItem.objects.get_or_create(
+                cart=cart, product=product, defaults={"quantity": quantity}
+            )
+            if not created:
+                item.quantity = quantity
+                item.save()
+    else:
+        cart = request.session.get("cart", {})
+        key = str(product.pk)
+        if quantity == 0:
+            cart.pop(key, None)
+        else:
+            cart[key] = quantity
+        request.session["cart"] = cart
+        request.session.modified = True
+
+    return JsonResponse({"quantity": quantity})
+
 
 def howtobuy(request):
     return render(request, "main/howtobuy.html")

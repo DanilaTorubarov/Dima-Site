@@ -6,6 +6,12 @@ from django.utils.html import conditional_escape, mark_safe
 register = template.Library()
 
 
+@register.filter
+def dict_get(d, key):
+    """Return d.get(key) — lets templates look up a dict with a dynamic key."""
+    return d.get(key)
+
+
 @register.simple_tag(takes_context=True)
 def url_with_page(context, page_num):
     """Return current query string with page replaced."""

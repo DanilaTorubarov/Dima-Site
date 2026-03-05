@@ -1313,6 +1313,103 @@ footer {
 }
 .error-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; }
 
+/* ── Cart widget (add-to-cart / stepper) ─────────────────── */
+@keyframes cartBtnPress {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(0.93); }
+    100% { transform: scale(1); }
+}
+@keyframes cartStepperIn {
+    from { opacity: 0; transform: scale(0.82); }
+    to   { opacity: 1; transform: scale(1); }
+}
+@keyframes cartQtyBump {
+    0%   { transform: scale(1);    color: var(--text-main); }
+    40%  { transform: scale(1.45); color: var(--accent); }
+    100% { transform: scale(1);    color: var(--text-main); }
+}
+.cart-widget { display: block; width: 100%; }
+
+.cart-add-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.45rem 1.05rem;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    background: var(--accent);
+    color: #fff;
+    transition: background var(--t), transform var(--t), box-shadow var(--t);
+    white-space: nowrap;
+}
+.cart-add-btn:hover {
+    background: var(--accent-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(1,118,183,.38);
+}
+.cart-add-btn:active { transform: scale(0.97); }
+.cart-add-btn--pressed { animation: cartBtnPress 0.22s ease forwards; }
+
+.cart-stepper--in { animation: cartStepperIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.cart-stepper-qty--bump { animation: cartQtyBump 0.28s ease forwards; }
+
+.cart-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1.5px solid var(--accent);
+    background: var(--bg-surface);
+}
+.cart-stepper-btn {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--t), color var(--t);
+    line-height: 1;
+}
+.cart-stepper-btn:hover { background: var(--accent-soft); }
+.cart-stepper-btn:active { background: #c8e4f4; }
+.cart-stepper-qty {
+    flex: 1;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-main);
+    pointer-events: none;
+    user-select: none;
+}
+
+/* Large variant — product detail page */
+.cart-widget--large .cart-add-btn {
+    font-size: 1rem;
+    padding: 0.65rem 1.5rem;
+}
+.cart-widget--large .cart-stepper {
+    max-width: 180px;
+}
+.cart-widget--large .cart-stepper-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.25rem;
+}
+.cart-widget--large .cart-stepper-qty { font-size: 1rem; }
+
 /* ── Mobile ──────────────────────────────────────────────── */
 @media (max-width: 768px) {
     .image-banner {
