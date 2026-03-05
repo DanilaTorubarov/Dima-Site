@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Shop{% endblock %}</title>
+    <title>{% block title %}Hydro-Point{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block description %}Лучший выбор сантехнических комплектующих. Убедитесь сами!{% endblock %}">
     {% load static %}
+    <link rel="icon" href="/media/hydropoint.svg" type="image/svg+xml">
     <link rel="stylesheet" href="{% static 'style.css' %}">
     {% block extra_head %}{% endblock %}
 </head>
@@ -54,6 +56,10 @@
                 {% endif %}
                 <div class="header-icons">
                     {% if user.is_authenticated %}
+                        <a href="{% url 'account_dashboard' %}" class="header-icon">
+                            <span class="header-icon-symbol">👤</span>
+                            <span>Аккаунт</span>
+                        </a>
                     {% else %}
                         <a href="{% url 'login' %}" class="header-icon">
                             <span class="header-icon-symbol">👤</span>
@@ -141,7 +147,7 @@
     </main>
     <footer>
         <div class="footer-inner">
-            <span>&copy; {{ now|date:"Y" }} Hydro-Point</span>
+            <span>&copy; {% now "Y" %} Hydro-Point</span>
             <a href="tel:+79175888990">+7(917)-588-89-90</a>
             <a target="_blank" href="https://t.me/jnrh770" style="align-content: center; vertical-align: center; display: flex;"><img src="/media/telegram.svg" alt="Телеграм" style="height: 19px; margin-right: 8px;"> - написать в телеграмм</a>
             <span>Лучшие цены на рынке</span>
