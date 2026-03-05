@@ -34,6 +34,36 @@ class ProductCharacteristicInline(admin.TabularInline):
     extra = 0
     fields = ("characteristic", "value")
 
+    def get_formset(self, request, obj=None, **kwargs):
+        initial = []
+        if obj and obj.pk:
+            existing_ids = set(
+                obj.characteristics.values_list("characteristic_id", flat=True)
+            )
+            missing = list(
+                CategoryCharacteristic.objects.filter(category=obj.category)
+                .exclude(id__in=existing_ids)
+                .order_by("order", "name")
+            )
+            initial = [{"characteristic": char.pk} for char in missing]
+
+        kwargs["extra"] = len(initial)
+        FormSet = super().get_formset(request, obj, **kwargs)
+
+        if initial:
+            _initial = initial
+            _orig_init = FormSet.__init__
+
+            def patched_init(self_fs, *args, **kw):
+                # Only inject on GET; on POST let submitted data win
+                if not kw.get("data") and "initial" not in kw:
+                    kw["initial"] = _initial
+                _orig_init(self_fs, *args, **kw)
+
+            FormSet = type(FormSet.__name__, (FormSet,), {"__init__": patched_init})
+
+        return FormSet
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "characteristic":
             product = getattr(request, "_product_obj", None)

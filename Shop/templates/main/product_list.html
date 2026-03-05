@@ -120,6 +120,21 @@
                 {% if current_category %}{{ current_category.name }}{% else %}Все товары{% endif %}
             </h2>
 
+            {% if category_children %}
+            <div class="category-tiles" style="margin-bottom: 1.5rem;">
+                {% for child in category_children %}
+                    <a href="{% url 'product_list' %}?category={{ child.slug }}"
+                       class="category-tile{% if child.image %} category-tile--image{% endif %}"
+                       {% if child.image %}style="background-image: url('{{ child.image.url }}');"{% endif %}>
+                        <div class="category-tile-body">
+                            <div class="category-tile-title">{{ child.name }}</div>
+                            <div class="category-tile-meta">Смотреть →</div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
             <div class="product-grid">
                 {% for product in products %}
                     <article class="card">

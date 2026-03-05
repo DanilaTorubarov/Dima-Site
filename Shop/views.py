@@ -204,11 +204,13 @@ def product_list(request):
 
     current_category = None
     category_breadcrumb = []
+    category_children = []
     if category_slug:
         current_category = get_object_or_404(Category, slug=category_slug)
         ids = _get_category_descendant_ids(current_category)
         base_products = base_products.filter(category_id__in=ids)
         category_breadcrumb = _get_category_ancestors(current_category)
+        category_children = list(current_category.children.order_by("name"))
 
     char_filters, products = _build_char_filters(request, current_category, base_products)
 
@@ -229,6 +231,7 @@ def product_list(request):
         "char_filters": char_filters,
         "has_active_char_filter": has_active_char_filter,
         "search_suggestions": search_suggestions,
+        "category_children": category_children,
     }
     return render(request, "main/product_list.html", context)
 
