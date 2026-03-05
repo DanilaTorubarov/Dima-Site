@@ -1,26 +1,46 @@
 {% extends "main/base.html" %}
 
-{% block title %}Регистрация{% endblock %}
+{% block title %}Регистрация — Hydro-Point{% endblock %}
 
 {% block content %}
 <div class="auth-wrap">
     <div class="auth-card">
-        <h1>Регистрация</h1>
+        <span class="auth-card-icon">👤</span>
+        <h1>Создать аккаунт</h1>
 
         <form method="post">
             {% csrf_token %}
-            <table class="form-table">
-                {{ form.as_table }}
-            </table>
-            <button type="submit" class="btn btn-primary" style="width:100%;margin-top:1rem;">
+
+            {% for field in form %}
+                <div class="form-field{% if field.errors %} form-field--error{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <p class="field-help">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <p class="field-error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="btn btn-primary" style="width:100%;margin-top:0.5rem;">
                 Создать аккаунт
             </button>
         </form>
 
+        <div class="auth-divider"></div>
         <p class="auth-link">
             Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a>
         </p>
     </div>
 </div>
+<style>
+    ul {
+        font-size: 0.76rem;
+        color: var(--text-light);
+        margin-top: 0.28rem;
+        line-height: 1.4;
+    }
+</style>
 {% endblock %}
-

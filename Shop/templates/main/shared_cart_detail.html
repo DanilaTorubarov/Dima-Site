@@ -1,19 +1,19 @@
 {% extends "main/base.html" %}
 
-{% block title %}Shared cart{% endblock %}
+{% block title %}Корзина пользователя{% endblock %}
 
 {% block content %}
-<h1>Shared cart</h1>
+<h1>Корзина пользователя</h1>
 
 <p id="copy-status" style="color: #16a34a; display: none;">Link copied to clipboard.</p>
 
 {% if items %}
-    <table>
+    <table style="border-spacing: 15px;">
         <thead>
         <tr>
-            <th>Product</th>
-            <th>SKU</th>
-            <th>Quantity</th>
+            <th>Продукт</th>
+            <th>Артикул</th>
+            <th>Количество</th>
         </tr>
         </thead>
         <tbody>
@@ -27,10 +27,10 @@
         </tbody>
     </table>
 {% else %}
-    <p>This shared cart is empty.</p>
+    <p>Корзина пуста.</p>
 {% endif %}
 
-<p><a href="{% url 'product_list' %}">Back to catalog</a></p>
+<p><a href="{% url 'product_list' %}">Вернутся в каталог</a></p>
 
 <script>
     (function () {
@@ -50,55 +50,4 @@
 </script>
 {% endblock %}
 
-{% extends "main/base.html" %}
-
-{% block title %}Shared cart{% endblock %}
-
-{% block content %}
-<h1>Shared cart</h1>
-
-<p id="copy-status" style="color: #16a34a; display: none;">Link copied to clipboard.</p>
-
-{% if items %}
-    <table>
-        <thead>
-        <tr>
-            <th>Product</th>
-            <th>SKU</th>
-            <th>Quantity</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for item in items %}
-            <tr>
-                <td><a href="{% url 'product_detail' item.product.pk %}">{{ item.product.name }}</a></td>
-                <td>{{ item.product.sku }}</td>
-                <td>{{ item.quantity }}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <p>This shared cart is empty.</p>
-{% endif %}
-
-<p><a href="{% url 'product_list' %}">Back to catalog</a></p>
-
-<script>
-    (function () {
-        if (!navigator.clipboard || !window.isSecureContext) {
-            return;
-        }
-        var url = window.location.href;
-        navigator.clipboard.writeText(url).then(function () {
-            var el = document.getElementById("copy-status");
-            if (el) {
-                el.style.display = "block";
-            }
-        }).catch(function () {
-            // silently ignore
-        });
-    })();
-</script>
-{% endblock %}
 

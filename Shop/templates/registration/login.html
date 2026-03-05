@@ -1,11 +1,12 @@
 {% extends "main/base.html" %}
 
-{% block title %}Вход{% endblock %}
+{% block title %}Вход — Hydro-Point{% endblock %}
 
 {% block content %}
 <div class="auth-wrap">
     <div class="auth-card">
-        <h1>Войти</h1>
+        <span class="auth-card-icon">🔑</span>
+        <h1>Войти в аккаунт</h1>
 
         {% if form.errors %}
             <div class="auth-error">Неверный логин или пароль. Попробуйте ещё раз.</div>
@@ -13,15 +14,24 @@
 
         <form method="post">
             {% csrf_token %}
-            <table class="form-table">
-                {{ form.as_table }}
-            </table>
             <input type="hidden" name="next" value="{{ next }}">
-            <button type="submit" class="btn btn-primary" style="width:100%;margin-top:1rem;">
+
+            {% for field in form %}
+                <div class="form-field{% if field.errors %} form-field--error{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <p class="field-error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="btn btn-primary" style="width:100%;margin-top:0.5rem;">
                 Войти
             </button>
         </form>
 
+        <div class="auth-divider"></div>
         <p class="auth-link">
             Нет аккаунта? <a href="{% url 'register' %}">Зарегистрироваться</a>
         </p>

@@ -28,9 +28,9 @@ if not SECRET_KEY:
     )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['hydro-point.ru','www.hydro-point.ru']
+ALLOWED_HOSTS = ['hydro-point.ru','www.hydro-point.ru', '127.0.0.1']
 
 
 # Application definition

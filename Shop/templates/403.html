@@ -1,0 +1,17 @@
+{% extends "main/base.html" %}
+
+{% block title %}Доступ запрещён — Hydro-Point{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-code">403</div>
+    <h1 class="error-title">Доступ запрещён</h1>
+    <p class="error-desc">
+        У вас нет прав для просмотра этой страницы.
+    </p>
+    <div class="error-actions">
+        <a href="/" class="btn btn-primary">На главную</a>
+        <a href="javascript:history.back()" class="btn btn-secondary">Назад</a>
+    </div>
+</div>
+{% endblock %}
