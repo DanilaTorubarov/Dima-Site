@@ -204,7 +204,7 @@ def _smart_search(base_qs, query):
 
 
 def product_list(request):
-    base_products = Product.objects.select_related("category").filter(available=True)
+    base_products = Product.objects.select_related("category").prefetch_related("images").filter(available=True)
     categories = Category.objects.all()
 
     search_query = request.GET.get("q", "").strip()
@@ -271,11 +271,14 @@ def product_detail(request, pk):
             characteristics.append((char, seen[char.pk]))
         seen[char.pk].append(pc.value)
 
+    product_images = list(product.images.all())
+
     return render(
         request,
         "main/product_detail.html",
         {
             "product": product,
+            "product_images": product_images,
             "category_breadcrumb": category_breadcrumb,
             "characteristics": characteristics,
             "cart_quantities": _get_cart_quantities(request),

@@ -139,12 +139,15 @@
             <div class="product-grid">
                 {% for product in products %}
                     <article class="card">
-                        {% if product.image %}
+                        {% with first_img=product.images.all.0 %}
+                        {% if first_img or product.image %}
                             <div style="margin-bottom: 0.85rem; align-items: center; align-content: center; justify-content: center; display:flex;">
-                                <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                                <img src="{% if first_img %}{{ first_img.image.url }}{% else %}{{ product.image.url }}{% endif %}"
+                                     alt="{{ product.name }}"
                                      style="width:75%; height:180px; object-fit:cover; border-radius:8px;">
                             </div>
                         {% endif %}
+                        {% endwith %}
                         <h2>
                             <a href="{% url 'product_detail' product.pk %}">{{ product.name }}</a>
                         </h2>

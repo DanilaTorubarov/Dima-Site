@@ -60,6 +60,22 @@ class Product(models.Model):
         return f"{self.name} ({self.sku})"
 
 
+class ProductImage(models.Model):
+    product = models.ForeignKey(
+        Product, related_name="images", on_delete=models.CASCADE
+    )
+    image = models.ImageField(upload_to="product_images/")
+    order = models.PositiveIntegerField(default=0, verbose_name="Порядок")
+
+    class Meta:
+        ordering = ["order"]
+        verbose_name = "Изображение товара"
+        verbose_name_plural = "Изображения товара"
+
+    def __str__(self) -> str:
+        return f"Фото {self.order} — {self.product.name}"
+
+
 class Cart(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,

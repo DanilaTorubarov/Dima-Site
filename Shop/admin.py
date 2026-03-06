@@ -7,6 +7,7 @@ from .models import (
     CategoryCharacteristic,
     Product,
     ProductCharacteristic,
+    ProductImage,
     SharedCart,
     SharedCartItem,
 )
@@ -27,6 +28,12 @@ class CategoryAdmin(admin.ModelAdmin):
     search_fields = ("name",)
     fields = ("name", "slug", "parent", "show_on_homepage", "image")
     inlines = [CategoryCharacteristicInline]
+
+
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 1
+    fields = ("image", "order")
 
 
 class ProductCharacteristicInline(admin.TabularInline):
@@ -81,7 +88,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ("name", "sku", "category", "available")
     list_filter = ("available", "category")
     search_fields = ("name", "sku")
-    inlines = [ProductCharacteristicInline]
+    inlines = [ProductImageInline, ProductCharacteristicInline]
 
     def get_inline_instances(self, request, obj=None):
         request._product_obj = obj
