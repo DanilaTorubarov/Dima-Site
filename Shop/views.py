@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
-from django.contrib.auth.forms import UserCreationForm
+from .forms import RegistrationForm
 
 from .models import Cart, CartItem, Category, CategoryCharacteristic, Product, ProductCharacteristic, SharedCart, SharedCartItem
 
@@ -476,13 +476,13 @@ def register(request):
         return redirect("product_list")
 
     if request.method == "POST":
-        form = UserCreationForm(request.POST)
+        form = RegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
             return redirect("product_list")
     else:
-        form = UserCreationForm()
+        form = RegistrationForm()
 
     return render(request, "registration/register.html", {"form": form})
 

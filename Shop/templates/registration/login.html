@@ -18,7 +18,9 @@
 
             {% for field in form %}
                 <div class="form-field{% if field.errors %} form-field--error{% endif %}">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    <label for="{{ field.id_for_label }}">
+                        {% if field.html_name == "username" %}Email или логин{% else %}{{ field.label }}{% endif %}
+                    </label>
                     {{ field }}
                     {% for error in field.errors %}
                         <p class="field-error">{{ error }}</p>
