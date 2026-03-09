@@ -331,6 +331,8 @@ main { flex: 1; }
     font-size: 0.88rem;
     position: sticky;
     top: 72px;
+    max-height: calc(100vh - 88px);
+    overflow-y: auto;
 }
 .sidebar-section { margin-bottom: 1.4rem; }
 .sidebar-section:last-child { margin-bottom: 0; }

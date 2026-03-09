@@ -141,11 +141,11 @@
                     <article class="card">
                         {% with first_img=product.images.all.0 %}
                         {% if first_img or product.image %}
-                            <div style="margin-bottom: 0.85rem; align-items: center; align-content: center; justify-content: center; display:flex;">
+                            <a href="{% url 'product_detail' product.pk %}" style="margin-bottom: 0.85rem; align-items: center; align-content: center; justify-content: center; display:flex;">
                                 <img src="{% if first_img %}{{ first_img.image.url }}{% else %}{{ product.image.url }}{% endif %}"
                                      alt="{{ product.name }}"
                                      style="width:75%; height:180px; object-fit:cover; border-radius:8px;">
-                            </div>
+                            </a href="{% url 'product_detail' product.pk %}">
                         {% endif %}
                         {% endwith %}
                         <h2>
@@ -174,6 +174,32 @@
                     <p style="color: var(--text-muted); grid-column: 1/-1;">Товары не найдены.</p>
                 {% endfor %}
             </div>
+
+            {% if page_obj.paginator.num_pages > 1 %}
+            <nav class="pagination" aria-label="Страницы товаров">
+                {% if page_obj.has_previous %}
+                    <a class="page-btn" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}" aria-label="Предыдущая">&#8592;</a>
+                {% else %}
+                    <span class="page-btn page-btn--disabled" aria-disabled="true">&#8592;</span>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                        <span class="page-btn page-btn--active" aria-current="page">{{ num }}</span>
+                    {% elif num == 1 or num == page_obj.paginator.num_pages or num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                        <a class="page-btn" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ num }}">{{ num }}</a>
+                    {% elif num == page_obj.number|add:"-3" or num == page_obj.number|add:"3" %}
+                        <span class="page-ellipsis">…</span>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a class="page-btn" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}" aria-label="Следующая">&#8594;</a>
+                {% else %}
+                    <span class="page-btn page-btn--disabled" aria-disabled="true">&#8594;</span>
+                {% endif %}
+            </nav>
+            {% endif %}
         </div>
     </div>
 </section>

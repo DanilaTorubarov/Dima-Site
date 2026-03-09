@@ -235,6 +235,10 @@ def product_list(request):
     paginator = Paginator(products, PRODUCTS_PER_PAGE)
     page_obj = paginator.get_page(request.GET.get("page", 1))
 
+    params = request.GET.copy()
+    params.pop("page", None)
+    query_string = params.urlencode()
+
     context = {
         "products": page_obj,
         "page_obj": page_obj,
@@ -249,6 +253,7 @@ def product_list(request):
         "search_suggestions": search_suggestions,
         "category_children": category_children,
         "cart_quantities": _get_cart_quantities(request),
+        "query_string": query_string,
     }
     return render(request, "main/product_list.html", context)
 
