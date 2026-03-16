@@ -252,7 +252,7 @@ main { flex: 1; }
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 96px;
+    min-height: 180px;
     border: 2px solid transparent;
     transition: transform var(--t), box-shadow var(--t), border-color var(--t);
 }
@@ -284,17 +284,15 @@ main { flex: 1; }
 
 /* Image variant */
 .category-tile--image {
-    background-size: cover;
+    background-size: 105%;
     background-position: center;
     position: relative;
     overflow: hidden;
     border-color: transparent;
-    background-size: cover;
 }
 .category-tile--image::before {
     content: '';
     position: absolute;
-    inset: 0;
     border-radius: inherit;
     background: linear-gradient(160deg, rgba(0,0,0,.52) 0%, rgba(0,0,0,.28) 100%);
     transition: background var(--t);
