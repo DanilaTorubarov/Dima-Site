@@ -21,11 +21,13 @@
             <tr>
                 <td><a href="{% url 'product_detail' item.product.pk %}">{{ item.product.name }}</a></td>
                 <td>{{ item.product.sku }}</td>
+                <td>{% if item.product.price %}{{ item.product.price|format_price }}{% else %}—{% endif %}</td>
                 <td>{{ item.quantity }}</td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
+    <span class="cart-total-cost">Итого: <strong>{{ total_cost|format_price }}</strong></span>
 {% else %}
     <p>Корзина пуста.</p>
 {% endif %}
