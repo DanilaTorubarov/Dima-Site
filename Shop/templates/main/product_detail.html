@@ -60,6 +60,9 @@
         <div class="product-sku">Артикул: {{ product.sku }}</div>
         <a href="{% url 'product_list' %}?category={{ product.category.slug }}"
            class="product-category">{{ product.category.name }}</a>
+        {% if product.price %}
+        <div class="product-price product-price--large">{{ product.price|format_price }}</div>
+        {% endif %}
 
         {% if characteristics %}
         <dl class="product-chars product-chars--preview">

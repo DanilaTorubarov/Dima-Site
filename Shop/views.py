@@ -333,6 +333,10 @@ def cart_detail(request):
     if request.user.is_authenticated:
         cart = _get_or_create_cart_for_user(request.user)
         for item in cart.items.select_related("product"):
+            if item.product.price is not None:
+                item.subtotal = item.product.price * item.quantity
+            else:
+                item.subtotal = None
             items.append(item)
             total_items += item.quantity
     else:
@@ -361,18 +365,24 @@ def cart_detail(request):
                 product = products.get(product_id)
                 if not product:
                     continue
+                subtotal = product.price * quantity if product.price is not None else None
                 guest_item = type(
                     "GuestCartItem",
                     (),
-                    {"product": product, "quantity": quantity},
+                    {"product": product, "quantity": quantity, "subtotal": subtotal},
                 )
                 items.append(guest_item)
                 total_items += quantity
+
+    total_cost = sum(
+        item.subtotal for item in items if item.subtotal is not None
+    ) or None
 
     context = {
         "cart": cart,
         "items": items,
         "total_items": total_items,
+        "total_cost": total_cost,
     }
     return render(request, "main/cart_detail.html", context)
 

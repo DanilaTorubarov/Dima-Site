@@ -161,6 +161,9 @@
                         <div class="card-meta">
                             Арт. {{ product.sku }} · {{ product.category.name }}
                         </div>
+                        {% if product.price %}
+                        <div class="product-price">{{ product.price|format_price }}</div>
+                        {% endif %}
                         <div class="card-footer">
                             {% with qty=cart_quantities|dict_get:product.pk %}
                             <div class="cart-widget" data-product-id="{{ product.pk }}">
