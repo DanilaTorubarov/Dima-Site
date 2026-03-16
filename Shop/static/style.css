@@ -289,6 +289,7 @@ main { flex: 1; }
     position: relative;
     overflow: hidden;
     border-color: transparent;
+    background-size: cover;
 }
 .category-tile--image::before {
     content: '';
