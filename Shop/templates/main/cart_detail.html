@@ -1,4 +1,5 @@
 {% extends "main/base.html" %}
+{% load shop_filters %}
 
 {% block title %}Корзина{% endblock %}
 
@@ -12,7 +13,9 @@
                 <tr>
                     <th>Товар</th>
                     <th>Артикул</th>
+                    <th>Цена</th>
                     <th>Количество</th>
+                    <th>Сумма</th>
                     <th></th>
                 </tr>
             </thead>
@@ -25,6 +28,9 @@
                             </a>
                         </td>
                         <td style="color:var(--text-muted);font-size:.85rem;">{{ item.product.sku }}</td>
+                        <td class="cart-price">
+                            {% if item.product.price %}{{ item.product.price|format_price }}{% else %}—{% endif %}
+                        </td>
                         <td>
                             {% if user.is_authenticated %}
                                 <form method="post" action="{% url 'update_cart_item' item.id %}" class="inline">
@@ -36,6 +42,9 @@
                             {% else %}
                                 {{ item.quantity }}
                             {% endif %}
+                        </td>
+                        <td class="cart-subtotal">
+                            {% if item.product.price %}{{ item.subtotal|format_price }}{% else %}—{% endif %}
                         </td>
                         <td>
                             {% if user.is_authenticated %}
@@ -54,6 +63,9 @@
         <div class="cart-footer">
             <div class="cart-total">
                 Итого позиций: <strong>{{ total_items }}</strong>
+                {% if total_cost %}
+                <span class="cart-total-cost">Итого: <strong>{{ total_cost|format_price }}</strong></span>
+                {% endif %}
             </div>
             <div class="cart-actions">
                 <a href="tel:+79175888990">+7(917)-588-89-90</a>

@@ -43,6 +43,13 @@ class Product(models.Model):
     sku = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to="product_images/", blank=True, null=True)
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Цена (₽)",
+    )
     category = models.ForeignKey(
         Category, related_name="products", on_delete=models.PROTECT
     )

@@ -20,6 +20,19 @@ def url_with_page(context, page_num):
     return "?" + params.urlencode()
 
 
+@register.filter
+def format_price(value):
+    """Format a decimal/int price as '1 234 ₽'. Returns '' if value is None."""
+    if value is None:
+        return ""
+    try:
+        amount = int(round(float(value)))
+        formatted = f"{amount:,}".replace(",", "\u00a0")  # non-breaking space
+        return f"{formatted}\u00a0₽"
+    except (TypeError, ValueError):
+        return f"{value}\u00a0₽"
+
+
 @register.filter(needs_autoescape=True)
 def render_description(value, autoescape=True):
     """
