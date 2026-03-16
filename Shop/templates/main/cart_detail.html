@@ -28,6 +28,7 @@
                             </a>
                         </td>
                         <td style="color:var(--text-muted);font-size:.85rem;">{{ item.product.sku }}</td>
+                        <td>{% if item.product.price %}{{ item.product.price|format_price }}{% else %}—{% endif %}</td>
                         <td>
                             {% if user.is_authenticated %}
                                 <form method="post" action="{% url 'update_cart_item' item.id %}" class="inline">
