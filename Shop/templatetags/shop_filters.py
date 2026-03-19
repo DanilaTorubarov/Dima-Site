@@ -22,13 +22,21 @@ def url_with_page(context, page_num):
 
 @register.filter
 def format_price(value):
-    """Format a decimal/int price as '1 234 ₽'. Returns '' if value is None."""
+    """Format a decimal/int price as '1 234 ₽' or '1 234,50 ₽'. Returns '' if value is None."""
     if value is None:
         return ""
     try:
-        amount = int(round(float(value)))
-        formatted = f"{amount:,}".replace(",", "\u00a0")  # non-breaking space
-        return f"{formatted}\u00a0₽"
+        f = float(value)
+        # Show kopecks only when the fractional part is non-zero
+        if f != int(f):
+            whole = int(f)
+            frac = round(f - whole, 2)
+            kopecks = round(frac * 100)
+            whole_fmt = f"{whole:,}".replace(",", "\u00a0")
+            return f"{whole_fmt},{kopecks:02d}\u00a0₽"
+        else:
+            whole_fmt = f"{int(f):,}".replace(",", "\u00a0")
+            return f"{whole_fmt}\u00a0₽"
     except (TypeError, ValueError):
         return f"{value}\u00a0₽"
 

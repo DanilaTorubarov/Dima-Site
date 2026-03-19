@@ -28,9 +28,8 @@ if not SECRET_KEY:
     )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-
-ALLOWED_HOSTS = ['hydro-point.ru','www.hydro-point.ru']
+DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
+ALLOWED_HOSTS = ['hydro-point.ru', 'www.hydro-point.ru', '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -134,5 +133,17 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = 'static/'
 # Media files (uploaded product images)
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# ── Security hardening (active in production, i.e. when DEBUG=False) ─────────
+if not DEBUG:
+    SECURE_HSTS_SECONDS = 31536000          # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True      # block MIME-type sniffing
+    SESSION_COOKIE_SECURE = True            # session cookie only over HTTPS
+    SESSION_COOKIE_HTTPONLY = True          # JS cannot read session cookie
+    CSRF_COOKIE_SECURE = True               # CSRF cookie only over HTTPS
+    CSRF_COOKIE_HTTPONLY = True             # JS cannot read CSRF cookie
+    X_FRAME_OPTIONS = "DENY"               # no embedding in iframes

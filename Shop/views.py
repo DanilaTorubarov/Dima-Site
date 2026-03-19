@@ -176,11 +176,12 @@ PRODUCTS_PER_PAGE = 30
 def _smart_search(base_qs, query):
     """
     Return (queryset, suggestions).
-    1. Try exact icontains match.
-    2. If no results, try every word (OR logic).
-    3. If still no results, use difflib for fuzzy name suggestions.
+    1. Case-insensitive whole-phrase containment.
+    2. If no results, any-word OR match (ignores short words).
+    3. If still no results, case-insensitive fuzzy difflib matching —
+       returns actual products whose names are similar, plus a suggestion list.
     """
-    # Primary: whole-phrase containment
+    # Primary: whole-phrase containment (Django icontains is case-insensitive)
     qs = base_qs.filter(name__icontains=query)
     if qs.exists():
         return qs, []
@@ -195,11 +196,27 @@ def _smart_search(base_qs, query):
         if qs.exists():
             return qs, []
 
-    # Tertiary: fuzzy suggestions from all available product names
+    # Tertiary: case-insensitive fuzzy matching via difflib
     all_names = list(
         Product.objects.filter(available=True).values_list("name", flat=True)
     )
-    suggestions = get_close_matches(query, all_names, n=5, cutoff=0.45)
+    # Normalise to lowercase for difflib so "насос" matches "Насос"
+    query_lower = query.lower()
+    lower_to_original = {}
+    for name in all_names:
+        lower_to_original.setdefault(name.lower(), name)
+
+    similar_lower = get_close_matches(
+        query_lower, list(lower_to_original.keys()), n=5, cutoff=0.45
+    )
+    suggestions = [lower_to_original[s] for s in similar_lower]
+
+    if suggestions:
+        # Return actual products matching the fuzzy names
+        qs = base_qs.filter(name__in=suggestions)
+        if qs.exists():
+            return qs, suggestions
+
     return base_qs.none(), suggestions
 
 
@@ -232,6 +249,12 @@ def product_list(request):
 
     has_active_char_filter = any(cf["is_active"] for cf in char_filters)
 
+    sort = request.GET.get("sort", "").strip()
+    if sort == "price_asc":
+        products = products.order_by("price")
+    elif sort == "price_desc":
+        products = products.order_by("-price")
+
     paginator = Paginator(products, PRODUCTS_PER_PAGE)
     page_obj = paginator.get_page(request.GET.get("page", 1))
 
@@ -254,6 +277,7 @@ def product_list(request):
         "category_children": category_children,
         "cart_quantities": _get_cart_quantities(request),
         "query_string": query_string,
+        "sort": sort,
     }
     return render(request, "main/product_list.html", context)
 

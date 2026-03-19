@@ -102,6 +102,15 @@
                 </div>
                 {% endfor %}
 
+                <div class="sidebar-section" style="margin-top:1rem;">
+                    <div class="sidebar-section-title">Сортировка</div>
+                    <select name="sort" class="sidebar-input" style="margin-bottom:0;">
+                        <option value="" {% if not sort %}selected{% endif %}>По умолчанию</option>
+                        <option value="price_asc" {% if sort == "price_asc" %}selected{% endif %}>Цена: по возрастанию</option>
+                        <option value="price_desc" {% if sort == "price_desc" %}selected{% endif %}>Цена: по убыванию</option>
+                    </select>
+                </div>
+
                 <button type="submit" class="btn btn-secondary" style="width:100%;margin-top:.25rem;">Показать</button>
                 {% if has_active_char_filter or search_query or sku_query %}
                     <a href="{% url 'product_list' %}{% if active_category_slug %}?category={{ active_category_slug }}{% endif %}"
