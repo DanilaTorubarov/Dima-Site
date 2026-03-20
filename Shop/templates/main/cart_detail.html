@@ -19,29 +19,27 @@
                     <th></th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="cart-tbody">
                 {% for item in items %}
-                    <tr>
-                        <td>
+                    <tr data-product-pk="{{ item.product.pk }}" data-price="{{ item.product.price|default:'' }}">
+                        <td data-label="Товар">
                             <a href="{% url 'product_detail' item.product.pk %}" style="font-weight:500;">
                                 {{ item.product.name }}
                             </a>
                         </td>
-                        <td style="color:var(--text-muted);font-size:.85rem;">{{ item.product.sku }}</td>
-                        <td>{% if item.product.price %}{{ item.product.price|format_price }}{% else %}—{% endif %}</td>
-                        <td>
-                            {% if user.is_authenticated %}
-                                <form method="post" action="{% url 'update_cart_item' item.id %}" class="inline">
-                                    {% csrf_token %}
-                                    <input type="number" name="quantity" value="{{ item.quantity }}" min="1"
-                                           class="qty-input" style="width:4rem;">
-                                    <button type="submit" class="btn btn-secondary">Обновить</button>
-                                </form>
-                            {% else %}
-                                {{ item.quantity }}
-                            {% endif %}
+                        <td data-label="Артикул" style="color:var(--text-muted);font-size:.85rem;">{{ item.product.sku }}</td>
+                        <td data-label="Цена">{% if item.product.price %}{{ item.product.price|format_price }}{% else %}—{% endif %}</td>
+                        <td data-label="Количество">
+                            <div class="cart-row-qty">
+                                <button class="cart-stepper-btn cart-row-dec" type="button" aria-label="Уменьшить">−</button>
+                                <span class="cart-row-qty-val">{{ item.quantity }}</span>
+                                <button class="cart-stepper-btn cart-row-inc" type="button" aria-label="Увеличить">+</button>
+                            </div>
                         </td>
-                        <td>
+                        <td data-label="Сумма" class="cart-row-subtotal">
+                            {% if item.subtotal %}{{ item.subtotal|format_price }}{% else %}—{% endif %}
+                        </td>
+                        <td data-label="">
                             {% if user.is_authenticated %}
                                 <form method="post" action="{% url 'update_cart_item' item.id %}" class="inline">
                                     {% csrf_token %}
@@ -57,9 +55,9 @@
 
         <div class="cart-footer">
             <div class="cart-total">
-                Итого позиций: <strong>{{ total_items }}</strong>
+                Итого позиций: <strong id="cart-total-items">{{ total_items }}</strong>
                 {% if total_cost %}
-                <span class="cart-total-cost">Итого: <strong>{{ total_cost|format_price }}</strong></span>
+                <span class="cart-total-cost">Итого: <strong id="cart-total-cost">{{ total_cost|format_price }}</strong></span>
                 {% endif %}
             </div>
             <div class="cart-actions">
@@ -133,6 +131,104 @@
             console.error(err);
         }).finally(function () {
             button.disabled = false;
+        });
+    });
+})();
+</script>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var CSRF = document.querySelector('meta[name="csrf-token"]').content;
+
+    function formatPrice(value) {
+        if (value === null || value === undefined || value === '') return '—';
+        var f = parseFloat(value);
+        if (isNaN(f)) return '—';
+        var whole = Math.floor(f);
+        var frac = Math.round((f - whole) * 100);
+        function fmtWhole(n) {
+            return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+        }
+        if (frac === 0) {
+            return fmtWhole(whole) + '\u00a0₽';
+        } else {
+            return fmtWhole(whole) + ',' + (frac < 10 ? '0' + frac : frac) + '\u00a0₽';
+        }
+    }
+
+    function updateTotals() {
+        var rows = document.querySelectorAll('#cart-tbody tr');
+        var totalItems = 0;
+        var totalCost = 0;
+        var hasCost = false;
+
+        rows.forEach(function (row) {
+            var qtyEl = row.querySelector('.cart-row-qty-val');
+            var price = row.dataset.price;
+            if (!qtyEl) return;
+            var qty = parseInt(qtyEl.textContent, 10) || 0;
+            totalItems += qty;
+            if (price !== '' && price !== undefined) {
+                totalCost += parseFloat(price) * qty;
+                hasCost = true;
+            }
+        });
+
+        var totalItemsEl = document.getElementById('cart-total-items');
+        var totalCostEl = document.getElementById('cart-total-cost');
+        if (totalItemsEl) totalItemsEl.textContent = totalItems;
+        if (totalCostEl && hasCost) totalCostEl.textContent = formatPrice(totalCost);
+    }
+
+    document.querySelectorAll('#cart-tbody tr').forEach(function (row) {
+        var pk = row.dataset.productPk;
+        var price = row.dataset.price;
+        var dec = row.querySelector('.cart-row-dec');
+        var inc = row.querySelector('.cart-row-inc');
+        var qtyEl = row.querySelector('.cart-row-qty-val');
+        var subtotalCell = row.querySelector('.cart-row-subtotal');
+
+        if (!dec || !inc || !qtyEl) return;
+
+        function setQty(newQty) {
+            fetch('/cart/set/' + pk + '/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': CSRF,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: 'quantity=' + newQty
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.quantity === 0) {
+                    row.remove();
+                    updateTotals();
+                    if (!document.querySelector('#cart-tbody tr')) {
+                        window.location.reload();
+                    }
+                } else {
+                    qtyEl.textContent = data.quantity;
+                    if (subtotalCell && price !== '') {
+                        subtotalCell.textContent = formatPrice(parseFloat(price) * data.quantity);
+                    }
+                    updateTotals();
+                }
+            });
+        }
+
+        dec.addEventListener('click', function () {
+            var cur = parseInt(qtyEl.textContent, 10) || 1;
+            setQty(Math.max(0, cur - 1));
+        });
+
+        inc.addEventListener('click', function () {
+            var cur = parseInt(qtyEl.textContent, 10) || 0;
+            setQty(cur + 1);
         });
     });
 })();
