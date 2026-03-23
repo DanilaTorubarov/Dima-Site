@@ -651,6 +651,26 @@ form.inline { display: inline; }
     color: var(--text-main);
 }
 .cart-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;}
+
+/* ── Cart row quantity stepper ───────────────────────────── */
+.cart-row-qty {
+    display: inline-flex;
+    align-items: center;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--bg-surface);
+}
+.cart-row-qty-val {
+    min-width: 2rem;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0 0.25rem;
+    color: var(--text-main);
+    user-select: none;
+}
+
 .cart-empty {
     padding: 3rem 1.5rem;
     text-align: center;
@@ -1757,12 +1777,44 @@ footer {
     }
 
     .cart-wrap h1 { padding: 1rem; }
-    .cart-table th, .cart-table td { padding: 0.65rem 0.75rem; }
     .cart-footer {
         flex-direction: column;
         align-items: flex-start;
         padding: 0.9rem 1rem;
     }
+
+    /* Cart table → card layout on mobile */
+    .cart-table thead { display: none; }
+    .cart-table,
+    .cart-table tbody,
+    .cart-table tr,
+    .cart-table td { display: block; width: 100%; }
+    .cart-table tr {
+        border-bottom: 2px solid var(--border);
+        padding: 0.75rem 0;
+    }
+    .cart-table tr:last-child { border-bottom: none; }
+    .cart-table td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.35rem 1rem;
+        border-bottom: none;
+        font-size: 0.88rem;
+    }
+    .cart-table td[data-label]::before {
+        content: attr(data-label);
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        flex-shrink: 0;
+        margin-right: 0.75rem;
+    }
+    .cart-table td[data-label=""]::before { display: none; }
+    .cart-table td[data-label=""] { justify-content: flex-end; }
+    .cart-table tr:hover td { background: inherit; }
 
     .auth-card { padding: 1.5rem 1.25rem; }
 

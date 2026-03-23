@@ -230,10 +230,14 @@ def product_list(request):
     search_suggestions = []
 
     if search_query:
+        # Check for exact SKU match first (handles typing an article in the header search)
+        exact = Product.objects.filter(sku__iexact=search_query, available=True).first()
+        if exact:
+            return redirect("product_detail", pk=exact.pk)
         base_products, search_suggestions = _smart_search(base_products, search_query)
 
     if sku_query:
-        # Exact SKU match → go straight to the product page
+        # Exact SKU match via the sidebar SKU field → go straight to the product page
         exact = Product.objects.filter(sku__iexact=sku_query, available=True).first()
         if exact:
             return redirect("product_detail", pk=exact.pk)
