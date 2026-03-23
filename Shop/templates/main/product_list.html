@@ -9,7 +9,7 @@
     <img class="image-banner" src="/media/banner.png" alt="">
 </a>
 
-{% if homepage_categories %}
+{% if homepage_categories and not search_query and not sku_query %}
 <section class="homepage-categories" id="catalog">
     <div class="homepage-categories-title">Категории товаров</div>
     <div class="category-tiles">
@@ -137,7 +137,7 @@
                 {% if current_category %}{{ current_category.name }}{% else %}Все товары{% endif %}
             </h2>
 
-            {% if category_children %}
+            {% if category_children and not search_query and not sku_query %}
             <div class="category-tiles" style="margin-bottom: 1.5rem;">
                 {% for child in category_children %}
                     <a href="{% url 'product_list' %}?category={{ child.slug }}"
@@ -160,7 +160,7 @@
                             <a href="{% url 'product_detail' product.pk %}" style="margin-bottom: 0.85rem; align-items: center; align-content: center; justify-content: center; display:flex;">
                                 <img src="{% if first_img %}{{ first_img.image.url }}{% else %}{{ product.image.url }}{% endif %}"
                                      alt="{{ product.name }}"
-                                     style="width:75%; height:180px; object-fit:cover; border-radius:8px;">
+                                     style="width:100%; height:auto; max-height:260px; object-fit:contain; border-radius:8px;">
                             </a href="{% url 'product_detail' product.pk %}">
                         {% endif %}
                         {% endwith %}

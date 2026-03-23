@@ -112,11 +112,14 @@
         e.preventDefault();
         button.disabled = true;
 
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var csrfToken = csrfMeta ? csrfMeta.content : getCookie("csrftoken");
+
         fetch(form.action, {
             method: "POST",
             headers: {
                 "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": getCookie("csrftoken"),
+                "X-CSRFToken": csrfToken,
                 "Accept": "application/json"
             }
         }).then(function (response) {

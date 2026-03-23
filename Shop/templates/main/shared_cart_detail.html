@@ -1,4 +1,5 @@
 {% extends "main/base.html" %}
+{% load shop_filters %}
 
 {% block title %}Корзина пользователя{% endblock %}
 
@@ -13,6 +14,7 @@
         <tr>
             <th>Продукт</th>
             <th>Артикул</th>
+            <th>Цена</th>
             <th>Количество</th>
         </tr>
         </thead>
@@ -27,7 +29,7 @@
         {% endfor %}
         </tbody>
     </table>
-    <span class="cart-total-cost">Итого: <strong>{{ total_cost|format_price }}</strong></span>
+    {% if total_cost %}<span class="cart-total-cost">Итого: <strong>{{ total_cost|format_price }}</strong></span>{% endif %}
 {% else %}
     <p>Корзина пуста.</p>
 {% endif %}

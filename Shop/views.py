@@ -233,6 +233,10 @@ def product_list(request):
         base_products, search_suggestions = _smart_search(base_products, search_query)
 
     if sku_query:
+        # Exact SKU match → go straight to the product page
+        exact = Product.objects.filter(sku__iexact=sku_query, available=True).first()
+        if exact:
+            return redirect("product_detail", pk=exact.pk)
         base_products = base_products.filter(sku__icontains=sku_query)
 
     current_category = None
@@ -462,13 +466,19 @@ def share_cart(request):
 
 def shared_cart_detail(request, pk):
     shared_cart = get_object_or_404(SharedCart.objects.prefetch_related("items__product"), pk=pk)
-    items = shared_cart.items.all()
+    items = list(shared_cart.items.all())
+    total_cost = sum(
+        item.product.price * item.quantity
+        for item in items
+        if item.product.price is not None
+    ) or None
     return render(
         request,
         "main/shared_cart_detail.html",
         {
             "shared_cart": shared_cart,
             "items": items,
+            "total_cost": total_cost,
         },
     )
 
