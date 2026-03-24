@@ -152,6 +152,15 @@
             </div>
             {% endif %}
 
+            {% if search_suggestions and search_query %}
+            <div class="search-suggestion-banner">
+                Возможно, вы искали:
+                {% for s in search_suggestions %}
+                    <a href="?q={{ s|urlencode }}{% if active_category_slug %}&category={{ active_category_slug }}{% endif %}">{{ s }}</a>{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
             <div class="product-grid">
                 {% for product in products %}
                     <article class="card">
@@ -190,7 +199,17 @@
                         </div>
                     </article>
                 {% empty %}
-                    <p style="color: var(--text-muted); grid-column: 1/-1;">Товары не найдены.</p>
+                    <div style="grid-column: 1/-1;">
+                        <p style="color: var(--text-muted);">Товары не найдены.</p>
+                        {% if search_suggestions %}
+                        <p style="margin-top: .5rem; color: var(--text-muted);">
+                            Возможно, вы искали:
+                            {% for s in search_suggestions %}
+                                <a href="?q={{ s|urlencode }}{% if active_category_slug %}&category={{ active_category_slug }}{% endif %}">{{ s }}</a>{% if not forloop.last %},{% endif %}
+                            {% endfor %}
+                        </p>
+                        {% endif %}
+                    </div>
                 {% endfor %}
             </div>
 

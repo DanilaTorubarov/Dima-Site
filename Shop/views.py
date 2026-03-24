@@ -176,34 +176,42 @@ PRODUCTS_PER_PAGE = 30
 def _smart_search(base_qs, query):
     """
     Return (queryset, suggestions).
+    Uses Python-side case folding for all steps so Cyrillic search works
+    correctly on SQLite (where UPPER/LOWER only handle ASCII).
     1. Case-insensitive whole-phrase containment.
     2. If no results, any-word OR match (ignores short words).
     3. If still no results, case-insensitive fuzzy difflib matching —
        returns actual products whose names are similar, plus a suggestion list.
     """
-    # Primary: whole-phrase containment (Django icontains is case-insensitive)
-    qs = base_qs.filter(name__icontains=query)
-    if qs.exists():
-        return qs, []
+    query_lower = query.lower()
 
-    # Secondary: any word matches (ignore short stop-words)
-    words = [w for w in query.split() if len(w) > 1]
-    if words:
-        q = Q()
-        for w in words:
-            q |= Q(name__icontains=w)
-        qs = base_qs.filter(q)
+    # Fetch all available product PKs + names once for Python-side matching
+    all_entries = list(
+        Product.objects.filter(available=True).values_list("pk", "name")
+    )
+
+    # Primary: whole-phrase substring match via Python (handles Cyrillic on SQLite)
+    matching_pks = [pk for pk, name in all_entries if query_lower in name.lower()]
+    if matching_pks:
+        qs = base_qs.filter(pk__in=matching_pks)
         if qs.exists():
             return qs, []
 
+    # Secondary: any word matches (ignore short stop-words)
+    words = [w for w in query_lower.split() if len(w) > 1]
+    if words:
+        matching_pks = [
+            pk for pk, name in all_entries
+            if any(w in name.lower() for w in words)
+        ]
+        if matching_pks:
+            qs = base_qs.filter(pk__in=matching_pks)
+            if qs.exists():
+                return qs, []
+
     # Tertiary: case-insensitive fuzzy matching via difflib
-    all_names = list(
-        Product.objects.filter(available=True).values_list("name", flat=True)
-    )
-    # Normalise to lowercase for difflib so "насос" matches "Насос"
-    query_lower = query.lower()
     lower_to_original = {}
-    for name in all_names:
+    for _pk, name in all_entries:
         lower_to_original.setdefault(name.lower(), name)
 
     similar_lower = get_close_matches(
