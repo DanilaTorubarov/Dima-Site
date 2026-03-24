@@ -70,6 +70,10 @@
                         Поделиться корзиной
                     </button>
                 </form>
+                <div id="share-url-container" style="display:none;" class="share-url-container">
+                    <input type="text" id="share-url-input" class="share-url-input" readonly>
+                    <button type="button" id="share-url-copy" class="btn btn-secondary share-url-copy-btn">Копировать</button>
+                </div>
                 <a href="{% url 'product_list' %}" class="btn btn-primary">← В каталог</a>
             </div>
         </div>
@@ -89,7 +93,10 @@
     var form = document.getElementById("share-cart-form");
     var button = document.getElementById("share-cart-button");
     var statusEl = document.getElementById("share-status");
-    if (!form || !button || !window.fetch || !navigator.clipboard) return;
+    var urlContainer = document.getElementById("share-url-container");
+    var urlInput = document.getElementById("share-url-input");
+    var copyBtn = document.getElementById("share-url-copy");
+    if (!form || !button || !window.fetch) return;
 
     function getCookie(name) {
         var value = null;
@@ -104,6 +111,41 @@
             }
         }
         return value;
+    }
+
+    function showUrl(url) {
+        urlInput.value = url;
+        urlContainer.style.display = "flex";
+        urlInput.select();
+        urlInput.setSelectionRange(0, 99999);
+    }
+
+    function tryCopyToClipboard(url) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(function () {
+                statusEl.style.display = "inline-flex";
+                setTimeout(function () { statusEl.style.display = "none"; }, 3000);
+            }).catch(function () {
+                showUrl(url);
+            });
+        } else {
+            try {
+                urlInput.select();
+                document.execCommand("copy");
+                statusEl.style.display = "inline-flex";
+                setTimeout(function () { statusEl.style.display = "none"; }, 3000);
+            } catch (e) {
+                showUrl(url);
+            }
+        }
+    }
+
+    if (copyBtn && urlInput) {
+        copyBtn.addEventListener("click", function () {
+            urlInput.select();
+            urlInput.setSelectionRange(0, 99999);
+            tryCopyToClipboard(urlInput.value);
+        });
     }
 
     form.addEventListener("submit", function (e) {
@@ -125,10 +167,8 @@
             return response.json();
         }).then(function (data) {
             if (data.url) {
-                return navigator.clipboard.writeText(data.url).then(function () {
-                    statusEl.style.display = "inline-flex";
-                    setTimeout(function () { statusEl.style.display = "none"; }, 3000);
-                });
+                showUrl(data.url);
+                tryCopyToClipboard(data.url);
             }
         }).catch(function (err) {
             console.error(err);

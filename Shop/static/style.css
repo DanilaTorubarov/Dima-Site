@@ -688,6 +688,44 @@ form.inline { display: inline; }
     font-weight: 500;
 }
 
+.share-url-container {
+    display: none;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.share-url-input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    background: #f1f5f9;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.share-url-copy-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .share-url-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .share-url-input {
+        width: 100%;
+    }
+}
+
 /* ── Auth forms ──────────────────────────────────────────── */
 .auth-wrap {
     max-width: 440px;
