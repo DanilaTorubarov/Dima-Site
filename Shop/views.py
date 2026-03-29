@@ -364,7 +364,7 @@ def cart_detail(request):
 
     if request.user.is_authenticated:
         cart = _get_or_create_cart_for_user(request.user)
-        for item in cart.items.select_related("product"):
+        for item in cart.items.select_related("product").prefetch_related("product__images"):
             if item.product.price is not None:
                 item.subtotal = item.product.price * item.quantity
             else:
@@ -384,7 +384,7 @@ def cart_detail(request):
                 p.id: p
                 for p in Product.objects.filter(
                     id__in=product_ids, available=True
-                )
+                ).prefetch_related("images")
             }
             for product_id_str, qty in session_cart.items():
                 try:

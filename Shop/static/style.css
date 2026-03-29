@@ -136,6 +136,40 @@ header {
 }
 .search-box button:hover { color: var(--accent); }
 
+/* Mobile-only search bar rendered inside the page content */
+.search-box-mobile {
+    display: none;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 1rem;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: #f9fafb;
+    overflow: hidden;
+    transition: border-color var(--t), box-shadow var(--t);
+}
+.search-box-mobile:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(1,118,183,.12);
+    background: #fff;
+}
+.search-box-mobile input {
+    flex: 1;
+    padding: 0.65rem 1rem;
+    border: none;
+    outline: none;
+    font-size: 0.95rem;
+    background: transparent;
+}
+.search-box-mobile button {
+    padding: 0 1rem;
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
 .header-actions {
     display: flex;
     align-items: center;
@@ -390,6 +424,20 @@ main { flex: 1; }
     background: #fff;
 }
 
+/* ── Service / no-image card placeholder ────────────────── */
+.card-service-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 110px;
+    margin-bottom: 0.85rem;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, #e8f4fd 0%, #d0e8f5 100%);
+    color: var(--accent);
+    font-size: 2.4rem;
+}
+
 /* ── Product grid ────────────────────────────────────────── */
 .product-grid {
     display: grid;
@@ -602,6 +650,32 @@ form.inline { display: inline; }
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
+}
+.cart-item-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+.cart-item-thumb {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f4f6f8;
+}
+.cart-item-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.cart-item-thumb-icon {
+    font-size: 1.5rem;
+    line-height: 1;
 }
 .cart-wrap h1 {
     font-size: 1.3rem;
@@ -1737,11 +1811,8 @@ footer {
         font-size: 0.78rem;
         font-weight: 600;
     }
-    .search-box {
-        order: 3;
-        flex: 1 1 100%;
-        max-width: none;
-    }
+    .search-box { display: none; }          /* hidden in header on mobile */
+    .search-box-mobile { display: flex; }   /* shown at top of content area */
 
     .page-inner { padding: 0.5rem 0.9rem 5rem; }
 

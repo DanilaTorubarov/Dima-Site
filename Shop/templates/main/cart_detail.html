@@ -23,9 +23,22 @@
                 {% for item in items %}
                     <tr data-product-pk="{{ item.product.pk }}" data-price="{{ item.product.price|default:'' }}">
                         <td data-label="Товар">
-                            <a href="{% url 'product_detail' item.product.pk %}" style="font-weight:500;">
-                                {{ item.product.name }}
-                            </a>
+                            <div class="cart-item-cell">
+                                {% with first_img=item.product.images.all.0 %}
+                                <a href="{% url 'product_detail' item.product.pk %}" class="cart-item-thumb">
+                                    {% if first_img %}
+                                        <img src="{{ first_img.image.url }}" alt="{{ item.product.name }}">
+                                    {% elif item.product.image %}
+                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                    {% else %}
+                                        <span class="cart-item-thumb-icon">🔧</span>
+                                    {% endif %}
+                                </a>
+                                {% endwith %}
+                                <a href="{% url 'product_detail' item.product.pk %}" style="font-weight:500;">
+                                    {{ item.product.name }}
+                                </a>
+                            </div>
                         </td>
                         <td data-label="Артикул" style="color:var(--text-muted);font-size:.85rem;">{{ item.product.sku }}</td>
                         <td data-label="Цена">{% if item.product.price %}{{ item.product.price|format_price }}{% else %}—{% endif %}</td>
@@ -70,6 +83,7 @@
                         Поделиться корзиной
                     </button>
                 </form>
+                <a href="{% url 'product_list' %}?category=montazh" class="btn btn-secondary">🔧 Услуги монтажа</a>
                 <a href="{% url 'product_list' %}" class="btn btn-primary">← В каталог</a>
             </div>
         </div>

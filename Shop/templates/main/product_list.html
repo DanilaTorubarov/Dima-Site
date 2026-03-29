@@ -5,6 +5,11 @@
 
 {% block content %}
 
+<form class="search-box-mobile" method="get" action="{% url 'product_list' %}">
+    <input type="text" name="q" placeholder="Найти товар" value="{{ search_query }}">
+    <button type="submit">🔍</button>
+</form>
+
 <a class="banner-div" href="https://t.me/jnrh770" target="_blank">
     <img class="image-banner" src="/media/banner.png" alt="">
 </a>
@@ -162,6 +167,8 @@
                                      alt="{{ product.name }}"
                                      style="width:100%; height:auto; max-height:260px; object-fit:contain; border-radius:8px;">
                             </a href="{% url 'product_detail' product.pk %}">
+                        {% else %}
+                            <a href="{% url 'product_detail' product.pk %}" class="card-service-placeholder">🔧</a>
                         {% endif %}
                         {% endwith %}
                         <h2>
