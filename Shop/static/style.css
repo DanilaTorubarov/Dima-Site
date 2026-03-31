@@ -354,28 +354,29 @@ main { flex: 1; }
 
 /* Service / no-image tile */
 .category-tile--service {
-    background: linear-gradient(135deg, #0176b7 0%, #015a8e 100%);
+    background: linear-gradient(160deg, #eaf3fb 0%, #d4e9f7 100%);
     position: relative;
     overflow: hidden;
+    justify-content: flex-end;
 }
 .category-tile--service:hover {
-    border-color: #013f66;
-    box-shadow: 0 8px 28px rgba(1,118,183,.4);
+    border-color: var(--accent);
+    box-shadow: 0 8px 24px rgba(1,118,183,.18);
 }
 .category-tile--service .category-tile-title {
-    color: #fff;
-    text-shadow: 0 1px 3px rgba(0,0,0,.25);
+    color: var(--text-main);
 }
 .category-tile--service .category-tile-meta {
-    color: rgba(255,255,255,.85);
+    color: var(--accent);
 }
 .category-tile-service-icon {
     position: absolute;
-    right: -0.75rem;
-    bottom: -1rem;
-    font-size: 6rem;
-    opacity: 0.22;
-    line-height: 1;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -60%);
+    width: 72px;
+    height: 72px;
+    opacity: 0.55;
     pointer-events: none;
     user-select: none;
 }

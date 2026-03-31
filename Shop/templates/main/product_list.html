@@ -22,7 +22,11 @@
             <a href="{% url 'product_list' %}?category={{ category.slug }}"
                class="category-tile{% if category.image %} category-tile--image{% elif category.slug == 'montazh' %} category-tile--service{% endif %}{% if category.slug == 'montazh' %} category-tile--wide{% endif %}"
                {% if category.image %}style="background-image: url('{{ category.image.url }}');"{% endif %}>
-                {% if category.slug == 'montazh' %}<span class="category-tile-service-icon" aria-hidden="true">🔧</span>{% endif %}
+                {% if category.slug == 'montazh' %}
+                <svg class="category-tile-service-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" stroke="#5b8fb9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                {% endif %}
                 <div class="category-tile-body">
                     <div class="category-tile-title">{{ category.name }}</div>
                     <div class="category-tile-meta">Смотреть товары →</div>
