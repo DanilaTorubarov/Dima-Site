@@ -347,6 +347,38 @@ main { flex: 1; }
     box-shadow: 0 8px 28px rgba(0,0,0,.28);
 }
 
+/* Wide tile (spans 2 columns) */
+.category-tile--wide {
+    grid-column: span 2;
+}
+
+/* Service / no-image tile */
+.category-tile--service {
+    background: linear-gradient(135deg, #e8f4fd 0%, #c9e4f5 100%);
+    position: relative;
+    overflow: hidden;
+}
+.category-tile--service::after {
+    content: '🔧';
+    position: absolute;
+    right: -0.5rem;
+    bottom: -0.75rem;
+    font-size: 5.5rem;
+    opacity: 0.18;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+}
+.category-tile--service:hover {
+    border-color: var(--accent);
+}
+.category-tile--service .category-tile-title {
+    color: var(--text-main);
+}
+.category-tile--service .category-tile-meta {
+    color: var(--accent);
+}
+
 /* ── Mobile filter toggle ────────────────────────────────── */
 .filter-mob-toggle {
     display: none;

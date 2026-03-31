@@ -20,7 +20,7 @@
     <div class="category-tiles">
         {% for category in homepage_categories %}
             <a href="{% url 'product_list' %}?category={{ category.slug }}"
-               class="category-tile{% if category.image %} category-tile--image{% endif %}"
+               class="category-tile{% if category.image %} category-tile--image{% elif category.slug == 'montazh' %} category-tile--service{% endif %}{% if category.slug == 'montazh' %} category-tile--wide{% endif %}"
                {% if category.image %}style="background-image: url('{{ category.image.url }}');"{% endif %}>
                 <div class="category-tile-body">
                     <div class="category-tile-title">{{ category.name }}</div>
