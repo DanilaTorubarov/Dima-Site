@@ -39,7 +39,8 @@
 
 <section>
     <div class="layout-grid">
-        <button class="filter-mob-toggle" id="filter-mob-btn" type="button" aria-expanded="false" aria-controls="sidebar">
+        <div class="sidebar-wrap">
+        <button class="filter-mob-toggle" id="filter-mob-btn" type="button" aria-expanded="true" aria-controls="sidebar">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
@@ -128,6 +129,7 @@
                 {% endif %}
             </form>
         </aside>
+        </div>
 
         <div>
             {% if category_breadcrumb %}
@@ -241,13 +243,22 @@
 (function () {
     'use strict';
 
-    /* ── Mobile filter toggle ────────────────────────────── */
+    /* ── Filter toggle (desktop + mobile) ───────────────── */
     var mobBtn = document.getElementById('filter-mob-btn');
     var sidebar = document.getElementById('sidebar');
+    var grid    = document.querySelector('.layout-grid');
     if (mobBtn && sidebar) {
         mobBtn.addEventListener('click', function () {
-            var open = sidebar.classList.toggle('sidebar--open');
-            mobBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (window.innerWidth > 768) {
+                /* Desktop: collapse/expand the sidebar column */
+                var collapsed = grid.classList.toggle('layout-grid--collapsed');
+                sidebar.style.display = collapsed ? 'none' : '';
+                mobBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            } else {
+                /* Mobile: show/hide sidebar via class */
+                var open = sidebar.classList.toggle('sidebar--open');
+                mobBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
         });
     }
 

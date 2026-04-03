@@ -383,7 +383,7 @@ main { flex: 1; }
 
 /* ── Mobile filter toggle ────────────────────────────────── */
 .filter-mob-toggle {
-    display: none;
+    display: flex;
     align-items: center;
     gap: 0.45rem;
     padding: 0.5rem 1rem;
@@ -396,6 +396,7 @@ main { flex: 1; }
     cursor: pointer;
     margin-bottom: 0.75rem;
     transition: border-color var(--t), background var(--t);
+    width: fit-content;
 }
 .filter-mob-toggle:hover { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
 .filter-mob-toggle[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); }
@@ -406,6 +407,16 @@ main { flex: 1; }
     grid-template-columns: 252px minmax(0, 1fr);
     gap: 1.5rem;
     align-items: start;
+}
+.layout-grid--collapsed {
+    grid-template-columns: 1fr;
+}
+
+/* Sidebar wrapper — first grid column, stacks button above sidebar */
+.sidebar-wrap {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
 /* ── Sidebar ─────────────────────────────────────────────── */
@@ -1874,7 +1885,7 @@ footer {
         display: none;
     }
     .sidebar.sidebar--open { display: block; }
-    .filter-mob-toggle { display: flex; }
+    .sidebar-wrap { display: contents; } /* unwrap on mobile so button/sidebar stack normally */
 
     .product-layout {
         grid-template-columns: 1fr;
