@@ -1132,6 +1132,38 @@ footer {
 .tab-panel .product-chars,
 .tab-panel .product-description { margin-bottom: 0; }
 
+/* Mobile accordion toggle buttons — hidden on desktop */
+.tab-accordion-btn { display: none; }
+
+@media (max-width: 768px) {
+    .tab-nav { display: none; }
+    .tab-accordion-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 1rem 1.25rem;
+        border: none;
+        border-bottom: 1px solid var(--border);
+        background: #fafbfc;
+        cursor: pointer;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-align: left;
+        transition: color var(--t), background var(--t);
+    }
+    .tab-accordion-btn--open {
+        color: var(--accent);
+        background: var(--bg-surface);
+    }
+    .tab-accordion-icon {
+        font-size: 0.75rem;
+        margin-left: 0.5rem;
+        flex-shrink: 0;
+    }
+}
+
 /* chars preview in product-info */
 .product-chars--preview {
     margin-bottom: 0.75rem;

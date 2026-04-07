@@ -123,12 +123,18 @@
     </nav>
 
     {% if product.description %}
+    <button class="tab-accordion-btn tab-accordion-btn--open" data-accordion="tab-desc" aria-expanded="true">
+        Описание <span class="tab-accordion-icon">▲</span>
+    </button>
     <div class="tab-panel tab-panel--active" id="tab-desc" role="tabpanel">
         <div class="product-description">{{ product.description|render_description }}</div>
     </div>
     {% endif %}
 
     {% if characteristics %}
+    <button class="tab-accordion-btn" data-accordion="tab-chars" aria-expanded="false">
+        Характеристики <span class="tab-accordion-icon">▼</span>
+    </button>
     <div class="tab-panel{% if not product.description %} tab-panel--active{% endif %}"
          id="tab-chars" role="tabpanel">
         <dl class="product-chars">
@@ -173,13 +179,24 @@
     });
 
     // Touch swipe
-    var startX = 0;
+    var startX = 0, startY = 0, isHoriz = null;
     track.addEventListener('touchstart', function (e) {
         startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        isHoriz = null;
     }, { passive: true });
+    track.addEventListener('touchmove', function (e) {
+        if (isHoriz === null) {
+            var adx = Math.abs(e.touches[0].clientX - startX);
+            var ady = Math.abs(e.touches[0].clientY - startY);
+            if (adx > 4 || ady > 4) isHoriz = adx >= ady;
+        }
+        if (isHoriz) e.preventDefault();
+    }, { passive: false });
     track.addEventListener('touchend', function (e) {
         var dx = e.changedTouches[0].clientX - startX;
-        if (Math.abs(dx) > 40) go(current + (dx < 0 ? 1 : -1));
+        if (isHoriz && Math.abs(dx) > 40) go(current + (dx < 0 ? 1 : -1));
+        isHoriz = null;
     });
 })();
 </script>
@@ -213,6 +230,45 @@
             var tabs = document.getElementById('product-tabs');
             if (tabs) tabs.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
+    }
+
+    // Mobile accordion
+    function openAccordion(btn, panel) {
+        panel.classList.add('tab-panel--active');
+        btn.classList.add('tab-accordion-btn--open');
+        btn.setAttribute('aria-expanded', 'true');
+        btn.querySelector('.tab-accordion-icon').textContent = '▲';
+    }
+    function closeAccordion(btn, panel) {
+        panel.classList.remove('tab-panel--active');
+        btn.classList.remove('tab-accordion-btn--open');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.querySelector('.tab-accordion-icon').textContent = '▼';
+    }
+
+    document.querySelectorAll('.tab-accordion-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var panel = document.getElementById(btn.dataset.accordion);
+            if (!panel) return;
+            if (panel.classList.contains('tab-panel--active')) {
+                closeAccordion(btn, panel);
+            } else {
+                openAccordion(btn, panel);
+            }
+        });
+    });
+
+    // On mobile: ensure description is open, specs closed by default
+    if (window.innerWidth <= 768) {
+        var descPanel = document.getElementById('tab-desc');
+        var charsPanel = document.getElementById('tab-chars');
+        var descAccBtn = document.querySelector('.tab-accordion-btn[data-accordion="tab-desc"]');
+        var charsAccBtn = document.querySelector('.tab-accordion-btn[data-accordion="tab-chars"]');
+
+        if (charsPanel && charsAccBtn) closeAccordion(charsAccBtn, charsPanel);
+        if (descPanel && descAccBtn) openAccordion(descAccBtn, descPanel);
+        // if no description, nothing opens (both close above handles that)
+        if (!descPanel && charsPanel && charsAccBtn) closeAccordion(charsAccBtn, charsPanel);
     }
 })();
 </script>
