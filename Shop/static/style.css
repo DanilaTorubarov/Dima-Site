@@ -1516,6 +1516,8 @@ footer {
     display: flex;
     height: 100%;
     transition: transform 0.35s cubic-bezier(.4, 0, .2, 1);
+    touch-action: pan-y;
+    will-change: transform;
 }
 .product-gallery-slide {
     flex: 0 0 100%;

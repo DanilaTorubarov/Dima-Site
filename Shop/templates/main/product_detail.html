@@ -164,9 +164,13 @@
     var dots  = document.querySelectorAll('.gallery-dot');
     var current = 0;
 
+    function slideWidth() {
+        return track.parentElement.offsetWidth;
+    }
+
     function go(idx) {
         current = (idx + slides.length) % slides.length;
-        track.style.transform = 'translateX(-' + (current * 100) + '%)';
+        track.style.transform = 'translateX(-' + (current * slideWidth()) + 'px)';
         dots.forEach(function (d, i) {
             d.classList.toggle('gallery-dot--active', i === current);
         });
@@ -178,12 +182,16 @@
         dot.addEventListener('click', function () { go(i); });
     });
 
+    // Recompute translation on resize so pixel offsets stay correct
+    window.addEventListener('resize', function () { go(current); });
+
     // Touch swipe
-    var startX = 0, startY = 0, isHoriz = null;
+    var startX = 0, startY = 0, isHoriz = null, didSwipe = false;
     track.addEventListener('touchstart', function (e) {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
         isHoriz = null;
+        didSwipe = false;
     }, { passive: true });
     track.addEventListener('touchmove', function (e) {
         if (isHoriz === null) {
@@ -195,9 +203,17 @@
     }, { passive: false });
     track.addEventListener('touchend', function (e) {
         var dx = e.changedTouches[0].clientX - startX;
-        if (isHoriz && Math.abs(dx) > 40) go(current + (dx < 0 ? 1 : -1));
+        if (isHoriz && Math.abs(dx) > 40) {
+            go(current + (dx < 0 ? 1 : -1));
+            didSwipe = true;
+        }
         isHoriz = null;
     });
+
+    // Prevent swipe from also firing a click that opens the lightbox
+    track.addEventListener('click', function (e) {
+        if (didSwipe) { e.stopPropagation(); didSwipe = false; }
+    }, true);
 })();
 </script>
 <script>
