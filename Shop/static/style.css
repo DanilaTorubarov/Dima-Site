@@ -1511,11 +1511,63 @@ footer {
     border-radius: var(--radius-md);
     background: #f0f4f7;
     aspect-ratio: 1 / 1;
+    touch-action: pan-y;
 }
 .product-gallery-track {
     display: flex;
     height: 100%;
     transition: transform 0.35s cubic-bezier(.4, 0, .2, 1);
+    touch-action: pan-y;
+}
+
+/* ── Card gallery (product list) ─────────────────────────── */
+.card-gallery {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    margin-bottom: 0.85rem;
+    touch-action: pan-y;
+    cursor: pointer;
+}
+.card-gallery-track {
+    display: flex;
+    transition: transform 0.3s ease;
+    touch-action: pan-y;
+}
+.card-gallery-slide {
+    flex: 0 0 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.card-gallery-slide img {
+    width: 100%;
+    height: auto;
+    max-height: 260px;
+    object-fit: contain;
+    border-radius: 8px;
+    display: block;
+    pointer-events: none;
+}
+.card-gallery-dots {
+    position: absolute;
+    bottom: 6px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    pointer-events: none;
+}
+.card-gallery-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.25);
+    transition: background 0.2s;
+}
+.card-gallery-dot.active {
+    background: var(--accent, #5b8fb9);
 }
 .product-gallery-slide {
     flex: 0 0 100%;

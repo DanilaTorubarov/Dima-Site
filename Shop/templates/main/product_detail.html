@@ -178,26 +178,20 @@
         dot.addEventListener('click', function () { go(i); });
     });
 
-    // Touch swipe
-    var startX = 0, startY = 0, isHoriz = null;
-    track.addEventListener('touchstart', function (e) {
+    // Touch swipe (touch-action: pan-y handles vertical scroll natively)
+    var gallery = track.closest('.product-gallery') || track.parentElement;
+    var startX = 0, startY = 0;
+    gallery.addEventListener('touchstart', function (e) {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
-        isHoriz = null;
     }, { passive: true });
-    track.addEventListener('touchmove', function (e) {
-        if (isHoriz === null) {
-            var adx = Math.abs(e.touches[0].clientX - startX);
-            var ady = Math.abs(e.touches[0].clientY - startY);
-            if (adx > 4 || ady > 4) isHoriz = adx >= ady;
-        }
-        if (isHoriz) e.preventDefault();
-    }, { passive: false });
-    track.addEventListener('touchend', function (e) {
+    gallery.addEventListener('touchend', function (e) {
         var dx = e.changedTouches[0].clientX - startX;
-        if (isHoriz && Math.abs(dx) > 40) go(current + (dx < 0 ? 1 : -1));
-        isHoriz = null;
-    });
+        var dy = e.changedTouches[0].clientY - startY;
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+            go(current + (dx < 0 ? 1 : -1));
+        }
+    }, { passive: true });
 })();
 </script>
 <script>
